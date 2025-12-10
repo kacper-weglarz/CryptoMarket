@@ -16,5 +16,3 @@ services:
 
 volumes:
   postgres_data:
-
-    cnahginedawda
