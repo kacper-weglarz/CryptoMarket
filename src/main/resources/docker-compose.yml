@@ -7,7 +7,7 @@ services:
     restart: always
     environment:
       POSTGRES_DB: crypto-market-DB
-      POSTGRES_USER: postgre
+      POSTGRES_USER: alpin3k
       POSTGRES_PASSWORD: alpin3k
     ports:
       - "5432:5432"
