@@ -1,5 +1,6 @@
 package io.github.kacperweglarz.cryptomarket.entity;
 
+import io.github.kacperweglarz.cryptomarket.enums.DocumentType;
 import io.github.kacperweglarz.cryptomarket.enums.KycStatus;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -12,32 +13,24 @@ import java.time.LocalDateTime;
 
 @NoArgsConstructor @Data
 @Entity @AllArgsConstructor
-@Table(name = "users")
-public class User {
+@Table(name = "kyc_verification")
+public class KycVerification {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(length = 55)
-    private String name;
+    @OneToOne
+    @JoinColumn(name = "user_id")
+    private User user;
 
-    @Column(length = 55)
-    private String username;
+    @Column(name = "document_type")
+    @Enumerated(EnumType.STRING)
+    private DocumentType documentType;
 
-    @Column(length = 55)
-    private String alias;
+    private String documentURL;
 
-    @Column(length = 105, unique = true)
-    private String email;
-
-    @Column(length = 75)
-    private String passwordHash;
-
-    private boolean twoFactorAuthEnabled;
-
-    private String totpSecret;
-
+    @Column(name = "kyc_status")
     @Enumerated(EnumType.STRING)
     private KycStatus kycStatus;
 
