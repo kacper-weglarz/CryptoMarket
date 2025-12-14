@@ -1,0 +1,58 @@
+package io.github.kacperweglarz.cryptomarket.serviceTest;
+
+import io.github.kacperweglarz.cryptomarket.entity.Asset;
+import io.github.kacperweglarz.cryptomarket.repository.AssetRepository;
+import io.github.kacperweglarz.cryptomarket.service.AssetService;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
+
+
+@ExtendWith(MockitoExtension.class)
+public class AssetServiceTest {
+
+    @Mock
+    private AssetRepository assetRepository;
+
+    @InjectMocks
+    private AssetService assetService;
+
+    @Test
+    void shouldCreateAsset_WhenSymbolIsUnique() {
+
+        String assetSymbol = "BTC";
+        String assetName = "Bitcoin";
+
+        when(assetRepository.existsByAssetSymbol(assetSymbol)).thenReturn(Boolean.FALSE);
+        when(assetRepository.save(any(Asset.class))).thenAnswer(i -> i.getArgument(0));
+
+        Asset asset = assetService.create(assetSymbol, assetName);
+
+        assertNotNull(asset);
+        assertEquals(assetSymbol, asset.getAssetSymbol());
+        assertEquals(assetName, asset.getAssetName());
+
+        verify(assetRepository, times(1)).save(any(Asset.class));
+    }
+
+    @Test
+    void shouldThrowException_WhenSymbolIsNotUnique() {
+
+        String assetSymbol = "BTC";
+        String assetName = "Bitcoin";
+
+        when(assetRepository.existsByAssetSymbol(assetSymbol)).thenReturn(Boolean.TRUE);
+
+        assertThrows(IllegalArgumentException.class, () ->
+                assetService.create(assetSymbol, assetName),
+                "Asset symbol should be unique");
+
+        verify(assetRepository, never()).save(any(Asset.class));
+        }
+
+}
