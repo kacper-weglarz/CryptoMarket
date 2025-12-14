@@ -1,44 +1,39 @@
 package io.github.kacperweglarz.cryptomarket.entity;
 
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
-
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+
 
 @NoArgsConstructor @Getter
 @Setter @AllArgsConstructor
 @Entity
-@Table(name = "users")
-public class User {
+@Table(name = "wallet")
+public class Wallet {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column
     private Long id;
 
-    @Column(length = 55)
-    private String name;
+    @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @JoinColumn(name = "user_id", unique = true)
+    private User user;
 
-    @Column(length = 55)
-    private String username;
-
-    @Column(length = 55)
-    private String alias;
-
-    @Column(length = 105, unique = true)
-    private String email;
-
-    @Column(length = 75)
-    private String passwordHash;
-
-    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
-    private Wallet wallet;
+    @OneToMany(mappedBy = "wallet", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    private List<WalletItem> walletItems = new ArrayList<>();
 
     @Column @CreationTimestamp
     private LocalDateTime createdAt;
 
     @Column @UpdateTimestamp
     private LocalDateTime updatedAt;
+
 }
