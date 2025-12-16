@@ -15,17 +15,17 @@ public class AssetService {
         this.assetRepository = assetRepository;
     }
 
-    public Asset create(String assetSymbol, String assetName) {
+    public Asset createAsset(String assetSymbol, String assetName) {
 
         if (assetRepository.existsByAssetSymbol(assetSymbol)) {
             throw new IllegalArgumentException("Asset Symbol already exists");
         }
 
-        Asset asset = new Asset();
-        asset.setAssetSymbol(assetSymbol);
-        asset.setAssetName(assetName);
-        assetRepository.save(asset);
-        return asset;
+        Asset newAsset = new Asset();
+        newAsset.setAssetSymbol(assetSymbol);
+        newAsset.setAssetName(assetName);
+        assetRepository.save(newAsset);
+        return newAsset;
     }
 
 }

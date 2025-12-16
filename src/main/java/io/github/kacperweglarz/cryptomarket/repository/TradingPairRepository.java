@@ -7,5 +7,5 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface TradingPairRepository extends JpaRepository<TradingPair, Long> {
 
-
+    boolean existsTradingPair_ByTradingPairSymbol(String tradingPairSymbol);
 }

@@ -25,6 +25,9 @@ public class TradingPair {
     @OneToMany(mappedBy = "tradingPair", fetch = FetchType.LAZY)
     private List<MarketData> marketData;
 
+    @Column(name = "symbol")
+    private String tradingPairSymbol;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "base_asset_id")
     private Asset baseAsset;

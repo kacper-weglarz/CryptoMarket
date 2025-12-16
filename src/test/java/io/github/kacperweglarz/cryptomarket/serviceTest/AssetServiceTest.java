@@ -23,7 +23,7 @@ public class AssetServiceTest {
     private AssetService assetService;
 
     @Test
-    void shouldCreateAsset_WhenSymbolIsUnique() {
+    void shouldCreateAssetAsset_WhenSymbolIsUnique() {
 
         String assetSymbol = "BTC";
         String assetName = "Bitcoin";
@@ -31,7 +31,7 @@ public class AssetServiceTest {
         when(assetRepository.existsByAssetSymbol(assetSymbol)).thenReturn(Boolean.FALSE);
         when(assetRepository.save(any(Asset.class))).thenAnswer(i -> i.getArgument(0));
 
-        Asset asset = assetService.create(assetSymbol, assetName);
+        Asset asset = assetService.createAsset(assetSymbol, assetName);
 
         assertNotNull(asset);
         assertEquals(assetSymbol, asset.getAssetSymbol());
@@ -49,7 +49,7 @@ public class AssetServiceTest {
         when(assetRepository.existsByAssetSymbol(assetSymbol)).thenReturn(Boolean.TRUE);
 
         assertThrows(IllegalArgumentException.class, () ->
-                assetService.create(assetSymbol, assetName),
+                assetService.createAsset(assetSymbol, assetName),
                 "Asset symbol should be unique");
 
         verify(assetRepository, never()).save(any(Asset.class));
