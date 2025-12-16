@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.time.LocalDateTime;
 
 @NoArgsConstructor @Getter
@@ -25,7 +26,7 @@ public class MarketData {
     private TradingPair tradingPair;
 
     @Column(nullable = false)
-    private LocalDateTime timestamp;
+    private Instant timestamp;
 
     @Column(nullable = false)
     private BigDecimal open;

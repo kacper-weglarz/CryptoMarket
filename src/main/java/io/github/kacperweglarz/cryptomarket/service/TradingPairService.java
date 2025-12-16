@@ -36,4 +36,8 @@ public class TradingPairService {
         tradingPairRepository.save(newTradingPair);
         return newTradingPair;
     }
+
+    public TradingPair getTradingPairByTradingPairSymbol(String tradingPairSymbol) {
+        return tradingPairRepository.findByTradingPairSymbol(tradingPairSymbol);
+    }
 }

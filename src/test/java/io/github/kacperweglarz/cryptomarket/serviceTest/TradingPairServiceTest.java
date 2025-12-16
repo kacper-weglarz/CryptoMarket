@@ -5,7 +5,6 @@ import io.github.kacperweglarz.cryptomarket.entity.TradingPair;
 import io.github.kacperweglarz.cryptomarket.repository.TradingPairRepository;
 import io.github.kacperweglarz.cryptomarket.service.TradingPairService;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestTemplate;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
