@@ -11,5 +11,5 @@ public class UserResponse {
     private Long userId;
     private String alias;
     private String email;
-//    private String token; JWT
+    private String token;
 }
