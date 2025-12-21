@@ -2,7 +2,6 @@ package io.github.kacperweglarz.cryptomarket.config;
 
 import io.github.kacperweglarz.cryptomarket.security.component.AuthEntryPointJwt;
 import io.github.kacperweglarz.cryptomarket.security.component.AuthTokenFilter;
-import io.github.kacperweglarz.cryptomarket.security.service.CustomUserDetailsService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -51,7 +50,7 @@ public class SecurityConfig {
                 .sessionManagement(sessionManagement ->
                         sessionManagement.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(authHttpRequest -> authHttpRequest
-                        .requestMatchers("/").permitAll()
+                        //.requestMatchers("/").permitAll()
                         .requestMatchers("/api/v1/auth/**").permitAll()
                         .anyRequest().authenticated());
         http.addFilterBefore(authTokenFilter, UsernamePasswordAuthenticationFilter.class);
