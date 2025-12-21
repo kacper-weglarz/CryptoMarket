@@ -54,5 +54,4 @@ public class AssetServiceTest {
 
         verify(assetRepository, never()).save(any(Asset.class));
         }
-
 }
