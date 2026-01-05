@@ -3,6 +3,7 @@ package io.github.kacperweglarz.cryptomarket.service;
 import io.github.kacperweglarz.cryptomarket.DTO.request.RegisterRequest;
 import io.github.kacperweglarz.cryptomarket.entity.User;
 import io.github.kacperweglarz.cryptomarket.entity.Wallet;
+import io.github.kacperweglarz.cryptomarket.exception.UserAlreadyExistException;
 import io.github.kacperweglarz.cryptomarket.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -38,11 +39,11 @@ public class UserService {
     public User createUserWithWallet(RegisterRequest request) {
 
         if (findUserByEmail(request.getEmail()).isPresent()) {
-            throw new RuntimeException("User with this email already exist");
+            throw new UserAlreadyExistException("User with this email already exist");
         }
 
         if (findUserByAlias(request.getAlias()).isPresent()) {
-            throw new RuntimeException("User with this alias already exist");
+            throw new UserAlreadyExistException("User with this alias already exist");
         }
 
         String encodedPassword = passwordEncoder.encode(request.getPassword());
