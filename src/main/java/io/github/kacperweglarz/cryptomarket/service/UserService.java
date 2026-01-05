@@ -1,7 +1,6 @@
 package io.github.kacperweglarz.cryptomarket.service;
 
 import io.github.kacperweglarz.cryptomarket.DTO.request.RegisterRequest;
-import io.github.kacperweglarz.cryptomarket.DTO.response.UserResponse;
 import io.github.kacperweglarz.cryptomarket.entity.User;
 import io.github.kacperweglarz.cryptomarket.entity.Wallet;
 import io.github.kacperweglarz.cryptomarket.repository.UserRepository;

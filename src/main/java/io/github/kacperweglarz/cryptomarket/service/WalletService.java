@@ -2,9 +2,6 @@ package io.github.kacperweglarz.cryptomarket.service;
 
 import io.github.kacperweglarz.cryptomarket.entity.User;
 import io.github.kacperweglarz.cryptomarket.entity.Wallet;
-import io.github.kacperweglarz.cryptomarket.entity.WalletItem;
-import io.github.kacperweglarz.cryptomarket.repository.WalletRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
