@@ -39,7 +39,7 @@ public class MarketDataServiceTest {
         TradingPair tradingPair = new TradingPair();
         Instant now = Instant.now().truncatedTo(ChronoUnit.MINUTES);
 
-        when(tradingPairService.getTradingPairByTradingPairSymbol(symbol)).thenReturn(tradingPair);
+        when(tradingPairService.getOrCreateTradingPair(symbol)).thenReturn(tradingPair);
 
         MarketData marketData = marketDataService.updatePrices(symbol, price, volume);
 
@@ -52,7 +52,7 @@ public class MarketDataServiceTest {
         assertEquals(marketData.getTradingPair(), tradingPair);
         assertEquals(marketData.getTimestamp(), now);
 
-        verify(tradingPairService, times(1)).getTradingPairByTradingPairSymbol(symbol);
+        verify(tradingPairService, times(1)).getOrCreateTradingPair(symbol);
     }
 
     @Test
@@ -68,7 +68,7 @@ public class MarketDataServiceTest {
         Instant oldTimeStamp = Instant.now().minus(1, ChronoUnit.MINUTES);
         Instant now = Instant.now().truncatedTo(ChronoUnit.MINUTES);
 
-        when(tradingPairService.getTradingPairByTradingPairSymbol(symbol)).thenReturn(pair);
+        when(tradingPairService.getOrCreateTradingPair(symbol)).thenReturn(pair);
 
         MarketData oldCandle = marketDataService.updatePrices(symbol, price1, volume1);
 
@@ -99,7 +99,7 @@ public class MarketDataServiceTest {
         TradingPair tradingPair = new TradingPair();
         Instant now = Instant.now().truncatedTo(ChronoUnit.MINUTES);
 
-        when(tradingPairService.getTradingPairByTradingPairSymbol(symbol)).thenReturn(tradingPair);
+        when(tradingPairService.getOrCreateTradingPair(symbol)).thenReturn(tradingPair);
 
         marketDataService.updatePrices(symbol, firstPrice, firstVolume);
 
@@ -114,6 +114,6 @@ public class MarketDataServiceTest {
         assertEquals(marketData.getTradingPair(), tradingPair);
         assertEquals(marketData.getTimestamp(), now);
 
-        verify(tradingPairService, times(1)).getTradingPairByTradingPairSymbol(symbol);
+        verify(tradingPairService, times(1)).getOrCreateTradingPair(symbol);
     }
 }

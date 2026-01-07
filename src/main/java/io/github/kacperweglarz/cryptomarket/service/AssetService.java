@@ -6,6 +6,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashMap;
+import java.util.Map;
+
 @Service
 public class AssetService {
 
@@ -14,6 +17,20 @@ public class AssetService {
     @Autowired
     public AssetService(AssetRepository assetRepository) {
         this.assetRepository = assetRepository;
+    }
+
+    private static final Map<String, String> ASSET_NAMES = new HashMap<>();
+
+    static {
+        ASSET_NAMES.put("BTC", "Bitcoin");
+        ASSET_NAMES.put("ETH", "Ethereum");
+        ASSET_NAMES.put("USDT", "Tether");
+        ASSET_NAMES.put("BNB", "Binance Coin");
+        ASSET_NAMES.put("DOGE", "Dogecoin");
+        ASSET_NAMES.put("ADA", "Cardano");
+        ASSET_NAMES.put("XRP", "Ripple");
+        ASSET_NAMES.put("SOL", "Solana");
+        ASSET_NAMES.put("USDC", "USD Coin");
     }
 
     public Asset createAsset(String assetSymbol, String assetName) {
@@ -40,7 +57,10 @@ public class AssetService {
 
         Asset newAsset = new Asset();
         newAsset.setAssetSymbol(assetSymbol);
-        newAsset.setAssetName(assetName);
+
+        String assetNameChanger = ASSET_NAMES.getOrDefault(assetSymbol, assetName);
+
+        newAsset.setAssetName(assetNameChanger);
 
         assetRepository.save(newAsset);
 

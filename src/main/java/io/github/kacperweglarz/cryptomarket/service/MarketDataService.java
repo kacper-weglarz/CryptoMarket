@@ -32,7 +32,7 @@ public class MarketDataService {
 
         if (thisTradingPair == null) {
 
-            thisTradingPair = tradingPairService.getTradingPairByTradingPairSymbol(symbol);
+            thisTradingPair = tradingPairService.getOrCreateTradingPair(symbol);
 
             knownTradingPairs.put(symbol, thisTradingPair);
         }
@@ -91,7 +91,6 @@ public class MarketDataService {
         newMarketData.setTimestamp(timestamp);
 
         newMarketData.setTradingPair(tradingPair);
-
 
         return newMarketData;
     }

@@ -101,7 +101,7 @@ public class TradingPairServiceTest {
 
         when(tradingPairRepository.findByTradingPairSymbol(symbol)).thenReturn(existingPair);
 
-        TradingPair tradingPair = tradingPairService.getOrCreateTradingPair(base, quote);
+        TradingPair tradingPair = tradingPairService.getOrCreateTradingPair(symbol);
 
         assertEquals(existingPair, tradingPair);
         verify(tradingPairRepository, never()).save(any());
@@ -125,7 +125,7 @@ public class TradingPairServiceTest {
         when(assetService.getOrCreateAsset("USDT", "Tether")).thenReturn(quoteAsset);
         when(tradingPairRepository.save(any(TradingPair.class))).thenAnswer(i -> i.getArgument(0));
 
-        TradingPair result = tradingPairService.getOrCreateTradingPair(baseAsset, quoteAsset);
+        TradingPair result = tradingPairService.getOrCreateTradingPair(symbol);
 
         assertNotNull(result);
         assertEquals(symbol, result.getTradingPairSymbol());

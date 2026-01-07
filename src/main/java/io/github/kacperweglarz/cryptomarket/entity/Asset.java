@@ -29,7 +29,7 @@ public class Asset {
     @OneToMany(mappedBy = "quoteAsset", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private List<TradingPair> quoteAssets = new ArrayList<>();
 
-    @Column(name = "symbol", nullable = false, unique = true,  length = 5)
+    @Column(name = "symbol", nullable = false, unique = true,  length = 4)
     private String assetSymbol;
 
     @Column(name = "name",  nullable = false, unique = true, length = 50)

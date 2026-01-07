@@ -15,6 +15,8 @@ public class WalletService {
         newWallet.setUser(user);
         newWallet.setWalletItems(new ArrayList<>());
 
+
+
         return newWallet;
     }
 }

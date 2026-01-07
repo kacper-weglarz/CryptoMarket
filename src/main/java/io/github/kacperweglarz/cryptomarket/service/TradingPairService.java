@@ -36,20 +36,21 @@ public class TradingPairService {
     }
 
     @Transactional
-    public TradingPair getOrCreateTradingPair(Asset baseAsset, Asset quoteAsset) {
+    public TradingPair getOrCreateTradingPair(String tradingPairSymbol) {
 
-        String tradingPairSymbol = baseAsset.getAssetSymbol() + "/" + quoteAsset.getAssetSymbol();
-
-        TradingPair existingTradingPair = tradingPairRepository.findByTradingPairSymbol(tradingPairSymbol);
-
-        if (existingTradingPair != null) {
-            return existingTradingPair;
+        TradingPair existing = tradingPairRepository.findByTradingPairSymbol(tradingPairSymbol);
+        if (existing != null) {
+            return existing;
         }
 
-        Asset newBaseAsset = assetService.getOrCreateAsset(baseAsset.getAssetSymbol(), baseAsset.getAssetName());
-        Asset newQuoteAsset = assetService.getOrCreateAsset(quoteAsset.getAssetSymbol(), quoteAsset.getAssetName());
+        String[] parts = tradingPairSymbol.split("/");
+        String baseSymbol = parts[0];
+        String quoteSymbol = parts[1];
 
-        return saveTradingPair(newBaseAsset, newQuoteAsset, tradingPairSymbol);
+        Asset base = assetService.getOrCreateAsset(baseSymbol, baseSymbol);
+        Asset quote = assetService.getOrCreateAsset(quoteSymbol, quoteSymbol);
+
+        return saveTradingPair(base, quote, tradingPairSymbol);
     }
 
 
@@ -66,7 +67,7 @@ public class TradingPairService {
         return newTradingPair;
     }
 
-    public TradingPair getTradingPairByTradingPairSymbol(String tradingPairSymbol) {
+    public TradingPair get(String tradingPairSymbol) {
         return tradingPairRepository.findByTradingPairSymbol(tradingPairSymbol);
     }
 }
