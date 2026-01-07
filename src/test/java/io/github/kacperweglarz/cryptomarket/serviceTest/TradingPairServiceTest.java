@@ -3,6 +3,7 @@ package io.github.kacperweglarz.cryptomarket.serviceTest;
 import io.github.kacperweglarz.cryptomarket.entity.Asset;
 import io.github.kacperweglarz.cryptomarket.entity.TradingPair;
 import io.github.kacperweglarz.cryptomarket.repository.TradingPairRepository;
+import io.github.kacperweglarz.cryptomarket.service.AssetService;
 import io.github.kacperweglarz.cryptomarket.service.TradingPairService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -20,9 +21,14 @@ public class TradingPairServiceTest {
     @Mock
     private TradingPairRepository tradingPairRepository;
 
+    @Mock
+    private AssetService assetService;
+
     @InjectMocks
     private TradingPairService tradingPairService;
 
+
+    //CreateTradingPair
     @Test
     void shouldCreateTradingPair_WhenSymbolIsUnique_And_AssetsAreNotTheSame() {
 
@@ -76,6 +82,55 @@ public class TradingPairServiceTest {
         assertThrows(IllegalArgumentException.class, () -> tradingPairService.createTradingPair(baseAsset, quoteAsset));
 
         verify(tradingPairRepository, never()).save(any(TradingPair.class));
+    }
+
+
+    //GetORCreateTradingPair
+    @Test
+    void shouldReturnTradingPair_WhenTradingPairAlreadyExists() {
+
+        Asset base = new Asset();
+        base.setAssetSymbol("ETH");
+        Asset quote = new Asset();
+        quote.setAssetSymbol("USD");
+
+        String symbol = "ETH/USD";
+
+        TradingPair existingPair = new TradingPair();
+        existingPair.setTradingPairSymbol(symbol);
+
+        when(tradingPairRepository.findByTradingPairSymbol(symbol)).thenReturn(existingPair);
+
+        TradingPair tradingPair = tradingPairService.getOrCreateTradingPair(base, quote);
+
+        assertEquals(existingPair, tradingPair);
+        verify(tradingPairRepository, never()).save(any());
+        verify(assetService, never()).getOrCreateAsset(any(), any());
+    }
+
+    @Test
+    void shouldCreateNewTradingPair_WhenTradingPairNotExist() {
+
+        Asset baseAsset = new Asset();
+        baseAsset.setAssetSymbol("DOGE");
+        baseAsset.setAssetName("Dogecoin");
+        Asset quoteAsset = new Asset();
+        quoteAsset.setAssetSymbol("USDT");
+        quoteAsset.setAssetName("Tether");
+
+        String symbol = "DOGE/USDT";
+
+        when(tradingPairRepository.findByTradingPairSymbol(symbol)).thenReturn(null);
+        when(assetService.getOrCreateAsset("DOGE", "Dogecoin")).thenReturn(baseAsset);
+        when(assetService.getOrCreateAsset("USDT", "Tether")).thenReturn(quoteAsset);
+        when(tradingPairRepository.save(any(TradingPair.class))).thenAnswer(i -> i.getArgument(0));
+
+        TradingPair result = tradingPairService.getOrCreateTradingPair(baseAsset, quoteAsset);
+
+        assertNotNull(result);
+        assertEquals(symbol, result.getTradingPairSymbol());
+        verify(assetService, times(2)).getOrCreateAsset(anyString(), anyString());
+        verify(tradingPairRepository, times(1)).save(any(TradingPair.class));
     }
 
 }

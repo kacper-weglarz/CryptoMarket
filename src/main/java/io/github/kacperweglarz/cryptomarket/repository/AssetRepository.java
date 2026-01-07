@@ -8,4 +8,6 @@ import org.springframework.stereotype.Repository;
 public interface AssetRepository extends JpaRepository<Asset, Long> {
 
     boolean existsByAssetSymbol(String assetSymbol);
+
+    Asset getAssetsByAssetSymbol(String assetSymbol);
 }

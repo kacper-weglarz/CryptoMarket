@@ -10,7 +10,6 @@ import java.util.ArrayList;
 public class WalletService {
 
 
-
     public Wallet createWallet(User user) {
         Wallet newWallet = new Wallet();
         newWallet.setUser(user);
