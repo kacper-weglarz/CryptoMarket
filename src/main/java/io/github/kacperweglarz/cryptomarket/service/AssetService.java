@@ -30,7 +30,6 @@ public class AssetService {
         ASSET_NAMES.put("ADA", "Cardano");
         ASSET_NAMES.put("XRP", "Ripple");
         ASSET_NAMES.put("SOL", "Solana");
-        ASSET_NAMES.put("USDC", "USD Coin");
     }
 
     public Asset createAsset(String assetSymbol, String assetName) {

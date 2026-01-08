@@ -1,5 +1,6 @@
 package io.github.kacperweglarz.cryptomarket.entity;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -39,6 +40,7 @@ public class User implements UserDetails {
     private String passwordHash;
 
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
+    @JsonManagedReference
     private Wallet wallet;
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)

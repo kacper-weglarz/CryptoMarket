@@ -27,4 +27,35 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(errorResponse, HttpStatus.CONFLICT);
     }
 
+    @ExceptionHandler(UserNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleUserNotFoundException(UserNotFoundException ex) {
+
+        ErrorResponse errorResponse = new ErrorResponse(ex.getMessage(),404);
+
+        return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
+    }
+
+    @ExceptionHandler(InvalidAmountException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidAmountException(InvalidAmountException ex) {
+
+        ErrorResponse errorResponse = new ErrorResponse(ex.getMessage(),400);
+
+        return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(WalletAssetNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleWalletAssetNotFoundException(WalletAssetNotFoundException ex) {
+
+        ErrorResponse errorResponse = new ErrorResponse(ex.getMessage(),409);
+
+        return new ResponseEntity<>(errorResponse, HttpStatus.CONFLICT);
+    }
+
+    @ExceptionHandler(WalletNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleWalletNotFoundException(WalletNotFoundException ex) {
+
+        ErrorResponse errorResponse = new ErrorResponse(ex.getMessage(),404);
+
+        return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
+    }
 }
