@@ -24,7 +24,7 @@ public class WebSocketClient {
         this.marketDataService = marketDataService;
     }
 
-    @PostConstruct
+    //@PostConstruct
     public void connect() {
         try {
             WebSocketContainer container = ContainerProvider.getWebSocketContainer();

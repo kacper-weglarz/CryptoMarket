@@ -5,6 +5,9 @@ import io.github.kacperweglarz.cryptomarket.entity.Asset;
 import io.github.kacperweglarz.cryptomarket.entity.User;
 import io.github.kacperweglarz.cryptomarket.entity.Wallet;
 import io.github.kacperweglarz.cryptomarket.entity.WalletItem;
+import io.github.kacperweglarz.cryptomarket.exception.InvalidAmountException;
+import io.github.kacperweglarz.cryptomarket.exception.WalletAssetNotFoundException;
+import io.github.kacperweglarz.cryptomarket.exception.WalletNotFoundException;
 import io.github.kacperweglarz.cryptomarket.repository.WalletRepository;
 import io.github.kacperweglarz.cryptomarket.service.AssetService;
 import io.github.kacperweglarz.cryptomarket.service.WalletService;
@@ -116,10 +119,59 @@ public class WalletServiceTest {
 
         when(walletRepository.findByUserId(userId)).thenReturn(Optional.empty());
 
-        RuntimeException exception = assertThrows(RuntimeException.class, () -> {
+        assertThrows(WalletNotFoundException.class, () -> {
             walletService.getUserWallet(userId);
         });
+    }
 
-        assertEquals("Nie znaleziono portfela dla tego użytkownika", exception.getMessage());
+    @Test
+    void shouldDepositMoney_Successfully() {
+        Long userId = 1L;
+        BigDecimal depositAmount = new BigDecimal("100.00");
+
+        Wallet wallet = new Wallet();
+        wallet.setWalletItems(new ArrayList<>());
+
+        Asset usdtAsset = new Asset();
+        usdtAsset.setAssetSymbol("USDT");
+
+        WalletItem usdtItem = new WalletItem();
+        usdtItem.setAsset(usdtAsset);
+        usdtItem.setAmount(BigDecimal.ZERO);
+        usdtItem.setAvailableBalance(BigDecimal.ZERO);
+        wallet.getWalletItems().add(usdtItem);
+
+        when(walletRepository.findByUserId(userId)).thenReturn(Optional.of(wallet));
+
+        walletService.deposit(userId, depositAmount);
+
+        assertEquals(new BigDecimal("100.00"), usdtItem.getAmount());
+        assertEquals(new BigDecimal("100.00"), usdtItem.getAvailableBalance());
+        verify(walletRepository, times(1)).save(wallet);
+    }
+
+    @Test
+    void shouldThrowException_WhenDepositAmountIsNegative() {
+        Long userId = 1L;
+        BigDecimal negativeAmount = new BigDecimal("-50.00");
+
+        assertThrows(InvalidAmountException.class, () -> {
+            walletService.deposit(userId, negativeAmount);
+        });
+
+        verify(walletRepository, never()).save(any());
+    }
+
+    @Test
+    void shouldThrowException_WhenUSDT_AssetNotFoundInWallet() {
+        Long userId = 1L;
+        Wallet wallet = new Wallet();
+        wallet.setWalletItems(new ArrayList<>());
+
+        when(walletRepository.findByUserId(userId)).thenReturn(Optional.of(wallet));
+
+        assertThrows(WalletAssetNotFoundException.class, () -> {
+            walletService.deposit(userId, new BigDecimal("10.00"));
+        });
     }
 }
