@@ -5,14 +5,15 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.kacperweglarz.cryptomarket.service.MarketDataService;
 import jakarta.annotation.PostConstruct;
 import jakarta.websocket.*;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-
 import java.math.BigDecimal;
 import java.net.URI;
 
 @Component
 @ClientEndpoint
+@Slf4j
 public class WebSocketClient {
 
     private final MarketDataService marketDataService;
@@ -32,9 +33,9 @@ public class WebSocketClient {
 
             container.connectToServer(this, URI.create(uri));
 
-            System.out.println("✅Connected✅");
+            log.info("Connected to Binance WebSocket");
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("Failed to connect to Binance WebSocket", e);
         }
     }
 
@@ -42,13 +43,15 @@ public class WebSocketClient {
     @OnOpen
     public void onOpen(Session session) {
         this.session = session;
-        System.out.println("Session opened -> id + " + session.getId());
+        log.info("Session opened -> id + {}", session.getId());
     }
 
     @OnMessage
     public void onMessage(String message) {
         try {
             JsonNode node = mapper.readTree(message);
+
+            log.trace("Raw message received: {}", message);
 
             String rawSymbol = node.get("s").asText();
 
@@ -67,20 +70,20 @@ public class WebSocketClient {
 
             marketDataService.updatePrices(fixedSymbol, price, volume);
 
-            System.out.println("Odebrano: " + fixedSymbol + " Cena: " + price);
+            log.debug("Price updated for {}: {}", fixedSymbol, price);
 
         } catch (Exception e) {
-            System.err.println("Błąd parsowania: " + e.getMessage());
+            log.error("Error processing WebSocket message", e);
         }
     }
 
     @OnClose
     public void onClose(Session session) {
-        System.out.println("Session closed -> id + " + session.getId());
+        log.warn("Session closed, ID: {}", session.getId());
     }
 
     @OnError
     public void onError(Session session, Throwable error) {
-        error.printStackTrace();
+        log.error("WebSocket error", error);
     }
 }

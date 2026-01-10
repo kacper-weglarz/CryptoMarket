@@ -6,6 +6,7 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -18,6 +19,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import java.io.IOException;
 
 @Component
+@Slf4j
 public class AuthTokenFilter extends OncePerRequestFilter {
 
     private final JwtService jwtService;
@@ -56,7 +58,7 @@ public class AuthTokenFilter extends OncePerRequestFilter {
                 }
             }
         } catch (Exception e) {
-            System.out.println("Authentication failed: " + e.getMessage());
+            log.error("Cannot set user authentication: {}", e.getMessage());
         }
         filterChain.doFilter(request, response);
     }

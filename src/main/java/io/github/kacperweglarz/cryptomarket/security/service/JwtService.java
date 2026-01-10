@@ -3,14 +3,15 @@ package io.github.kacperweglarz.cryptomarket.security.service;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import jakarta.annotation.PostConstruct;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
 
 @Service
+@Slf4j
 public class JwtService {
 
     @Value("${jwt.secret}")
@@ -23,6 +24,7 @@ public class JwtService {
 
     @PostConstruct
     public void init(){
+        log.info("Initializing JwtService with expiration: {} ms", jwtExpiration);
         this.secretKey = Keys.hmacShaKeyFor(jwtSecret.getBytes(StandardCharsets.UTF_8));
     }
 
@@ -54,7 +56,7 @@ public class JwtService {
                     .parseSignedClaims(token);
                         return true;
         } catch (Exception e) {
-            System.out.println("JWT Token is invalid" + e.getMessage());
+            log.error("Invalid JWT token: {}", e.getMessage());
         }
         return false;
     }
