@@ -90,7 +90,7 @@ public class OrderService {
 
         } else {
 
-            BigDecimal currentPrice = new BigDecimal("91000"); //marketDataService.getCurrentPrice(request.getSymbol());
+            BigDecimal currentPrice =  marketDataService.getCurrentPrice(request.getSymbol()); //new BigDecimal("91000");
 
             if (currentPrice == null || currentPrice.compareTo(BigDecimal.ZERO) <= 0) {
                 throw new PriceNotFoundException(request.getSymbol());

@@ -52,7 +52,7 @@ public class MarketDataService {
 
         } else if (candleTimeStamp.isAfter(thisCandle.getTimestamp())) {
 
-            //marketDataRepository.save(thisCandle);
+            marketDataRepository.save(thisCandle);
 
             returnCandle = createCandle(thisTradingPair,price,volume,candleTimeStamp);
 
