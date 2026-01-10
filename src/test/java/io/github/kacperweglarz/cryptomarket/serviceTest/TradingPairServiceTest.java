@@ -16,16 +16,16 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-public class TradingPairServiceTest {
+class TradingPairServiceTest {
 
     @Mock
-    private TradingPairRepository tradingPairRepository;
+    TradingPairRepository tradingPairRepository;
 
     @Mock
-    private AssetService assetService;
+    AssetService assetService;
 
     @InjectMocks
-    private TradingPairService tradingPairService;
+    TradingPairService tradingPairService;
 
 
     //CreateTradingPair
@@ -121,8 +121,8 @@ public class TradingPairServiceTest {
         String symbol = "DOGE/USDT";
 
         when(tradingPairRepository.findByTradingPairSymbol(symbol)).thenReturn(null);
-        when(assetService.getOrCreateAsset("DOGE", "Dogecoin")).thenReturn(baseAsset);
-        when(assetService.getOrCreateAsset("USDT", "Tether")).thenReturn(quoteAsset);
+        when(assetService.getOrCreateAsset("DOGE", "DOGE")).thenReturn(baseAsset);
+        when(assetService.getOrCreateAsset("USDT", "USDT")).thenReturn(quoteAsset);
         when(tradingPairRepository.save(any(TradingPair.class))).thenAnswer(i -> i.getArgument(0));
 
         TradingPair result = tradingPairService.getOrCreateTradingPair(symbol);

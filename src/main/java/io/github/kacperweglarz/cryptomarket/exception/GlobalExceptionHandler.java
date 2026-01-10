@@ -58,4 +58,20 @@ public class GlobalExceptionHandler {
 
         return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
     }
+
+    @ExceptionHandler(PriceNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handlePriceNotFoundException(PriceNotFoundException ex) {
+
+        ErrorResponse errorResponse = new ErrorResponse(ex.getMessage(),404);
+
+        return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
+    }
+
+    @ExceptionHandler(InsufficientFundsException.class)
+    public ResponseEntity<ErrorResponse> handleInsufficientFundsException(InsufficientFundsException ex) {
+
+        ErrorResponse errorResponse = new ErrorResponse(ex.getMessage(),400);
+
+        return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+    }
 }

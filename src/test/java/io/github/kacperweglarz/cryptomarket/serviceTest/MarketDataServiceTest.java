@@ -18,7 +18,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-public class MarketDataServiceTest {
+class MarketDataServiceTest {
 
     @Mock
     MarketDataRepository marketDataRepository;

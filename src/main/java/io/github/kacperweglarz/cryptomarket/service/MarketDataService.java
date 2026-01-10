@@ -52,7 +52,7 @@ public class MarketDataService {
 
         } else if (candleTimeStamp.isAfter(thisCandle.getTimestamp())) {
 
-            //marketDataRepository.save(thisCandle);
+            marketDataRepository.save(thisCandle);
 
             returnCandle = createCandle(thisTradingPair,price,volume,candleTimeStamp);
 
@@ -93,5 +93,16 @@ public class MarketDataService {
         newMarketData.setTradingPair(tradingPair);
 
         return newMarketData;
+    }
+
+    public BigDecimal getCurrentPrice(String symbol) {
+
+        MarketData latestCandle =  currentCandles.get(symbol);
+
+        if (latestCandle != null) {
+            return latestCandle.getClose();
+        }
+
+        return BigDecimal.ZERO;
     }
 }

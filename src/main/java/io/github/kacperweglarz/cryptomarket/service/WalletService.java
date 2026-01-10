@@ -5,6 +5,7 @@ import io.github.kacperweglarz.cryptomarket.entity.Asset;
 import io.github.kacperweglarz.cryptomarket.entity.User;
 import io.github.kacperweglarz.cryptomarket.entity.Wallet;
 import io.github.kacperweglarz.cryptomarket.entity.WalletItem;
+import io.github.kacperweglarz.cryptomarket.exception.InsufficientFundsException;
 import io.github.kacperweglarz.cryptomarket.exception.InvalidAmountException;
 import io.github.kacperweglarz.cryptomarket.exception.WalletAssetNotFoundException;
 import io.github.kacperweglarz.cryptomarket.exception.WalletNotFoundException;
@@ -41,23 +42,14 @@ public class WalletService {
             newWallet.setWalletItems(new ArrayList<>());
         }
 
-        WalletItem walletItem = new WalletItem();
-        walletItem.setWallet(newWallet);
-        walletItem.setAsset(asset);
-        walletItem.setAmount(BigDecimal.ZERO);
-        walletItem.setAvailableBalance(BigDecimal.ZERO);
-        walletItem.setLockedBalance(BigDecimal.ZERO);
-
-        newWallet.getWalletItems().add(walletItem);
-
+        createNewWalletItem(newWallet, asset);
 
         return newWallet;
     }
 
     public WalletResponse getUserWallet(Long id) {
 
-        Wallet wallet = walletRepository.findByUserId(id)
-                .orElseThrow(() -> new WalletNotFoundException("Wallet not initialized"));
+        Wallet wallet = getWalletOrThrow(id);
 
         List<WalletResponse.WalletItemResponse> itemsDto = wallet.getWalletItems().stream()
                 .map(item -> new WalletResponse.WalletItemResponse(
@@ -74,22 +66,85 @@ public class WalletService {
 
     @Transactional
     public void deposit(Long id, BigDecimal amount) {
-
         if (amount.compareTo(BigDecimal.ZERO) < 0) {
             throw new InvalidAmountException(amount.toString());
         }
 
-        Wallet wallet = walletRepository.findByUserId(id)
-                .orElseThrow(() -> new WalletNotFoundException("Wallet not initialized"));
+        Wallet wallet = getWalletOrThrow(id);
+        Asset usdtAsset = assetService.getOrCreateAsset("USDT", "Tether");
 
-        WalletItem userItemUSDT = wallet.getWalletItems().stream()
-                .filter(item -> "USDT".equals(item.getAsset().getAssetSymbol()))
-                .findFirst()
-                .orElseThrow(() -> new WalletAssetNotFoundException("USTD"));
-
-        userItemUSDT.setAmount(userItemUSDT.getAmount().add(amount));
-        userItemUSDT.setAvailableBalance(userItemUSDT.getAvailableBalance().add(amount));
+        addFunds(wallet, usdtAsset, amount);
 
         walletRepository.save(wallet);
+    }
+
+    @Transactional
+    public void trade(Long id, Asset assetToSpend, Asset assetToReceive, BigDecimal amountToSpend, BigDecimal amountToReceive) {
+        Wallet wallet = getWalletOrThrow(id);
+
+        subtractFunds(wallet, assetToSpend, amountToSpend);
+        addFunds(wallet, assetToReceive, amountToReceive);
+
+        walletRepository.save(wallet);
+    }
+
+    @Transactional
+    public void lockFunds(Long id, Asset asset, BigDecimal amountToLock) {
+        Wallet wallet = getWalletOrThrow(id);
+
+        WalletItem item = wallet.getWalletItems().stream()
+                .filter(i -> i.getAsset().getAssetSymbol().equals(asset.getAssetSymbol()))
+                .findFirst()
+                .orElseThrow(() -> new WalletAssetNotFoundException(asset.getAssetSymbol()));
+
+        if (item.getAvailableBalance().compareTo(amountToLock) < 0) {
+            throw new InsufficientFundsException(amountToLock.toString() + " available balance: " +  item.getAvailableBalance());
+        }
+
+        item.setAvailableBalance(item.getAvailableBalance().subtract(amountToLock));
+        item.setLockedBalance(item.getLockedBalance().add(amountToLock));
+
+        walletRepository.save(wallet);
+    }
+
+    private void addFunds(Wallet wallet, Asset asset, BigDecimal amount) {
+        WalletItem item = wallet.getWalletItems().stream()
+                .filter(i -> i.getAsset().getAssetSymbol().equals(asset.getAssetSymbol()))
+                .findFirst()
+                .orElseGet(() -> createNewWalletItem(wallet, asset));
+
+        item.setAmount(item.getAmount().add(amount));
+        item.setAvailableBalance(item.getAvailableBalance().add(amount));
+    }
+
+    private void subtractFunds(Wallet wallet, Asset asset, BigDecimal amount) {
+        WalletItem item = wallet.getWalletItems().stream()
+                .filter(i -> i.getAsset().getAssetSymbol().equals(asset.getAssetSymbol()))
+                .findFirst()
+                .orElseThrow(() -> new WalletAssetNotFoundException(asset.getAssetSymbol()));
+
+        if (item.getAvailableBalance().compareTo(amount) < 0) {
+            throw new InsufficientFundsException(amount + " available balance: " +  item.getAvailableBalance());
+        }
+
+        item.setAmount(item.getAmount().subtract(amount));
+        item.setAvailableBalance(item.getAvailableBalance().subtract(amount));
+    }
+
+    private WalletItem createNewWalletItem(Wallet wallet, Asset asset) {
+        WalletItem newItem = new WalletItem();
+        newItem.setWallet(wallet);
+        newItem.setAsset(asset);
+        newItem.setAmount(BigDecimal.ZERO);
+        newItem.setAvailableBalance(BigDecimal.ZERO);
+        newItem.setLockedBalance(BigDecimal.ZERO);
+
+        wallet.getWalletItems().add(newItem);
+        return newItem;
+    }
+
+    private Wallet getWalletOrThrow(Long userId) {
+        return walletRepository.findByUserId(userId)
+                .orElseThrow(() -> new WalletNotFoundException("Wallet not initialized"));
     }
 }

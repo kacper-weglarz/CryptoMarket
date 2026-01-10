@@ -16,26 +16,24 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Optional;
-
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-public class WalletServiceTest {
+class WalletServiceTest {
 
     @Mock
-    private AssetService assetService;
+    AssetService assetService;
 
     @Mock
-    private WalletRepository walletRepository;
+    WalletRepository walletRepository;
 
     @InjectMocks
-    private WalletService walletService;
+    WalletService walletService;
 
     @Test
     void shouldCreateNewWallet_With_USDTAsset() {
@@ -125,53 +123,153 @@ public class WalletServiceTest {
     }
 
     @Test
-    void shouldDepositMoney_Successfully() {
+    void shouldDeposit_AddFunds_ToExistingUSDT() {
         Long userId = 1L;
-        BigDecimal depositAmount = new BigDecimal("100.00");
+        BigDecimal amount = new BigDecimal("100.00");
 
         Wallet wallet = new Wallet();
         wallet.setWalletItems(new ArrayList<>());
 
-        Asset usdtAsset = new Asset();
-        usdtAsset.setAssetSymbol("USDT");
+        Asset usdt = new Asset(); usdt.setAssetSymbol("USDT");
 
-        WalletItem usdtItem = new WalletItem();
-        usdtItem.setAsset(usdtAsset);
-        usdtItem.setAmount(BigDecimal.ZERO);
-        usdtItem.setAvailableBalance(BigDecimal.ZERO);
-        wallet.getWalletItems().add(usdtItem);
+        WalletItem item = new WalletItem(1L, wallet, usdt, new BigDecimal("50.00"), new BigDecimal("50.00"), BigDecimal.ZERO);
+        wallet.getWalletItems().add(item);
 
         when(walletRepository.findByUserId(userId)).thenReturn(Optional.of(wallet));
+        when(assetService.getOrCreateAsset("USDT", "Tether")).thenReturn(usdt);
 
-        walletService.deposit(userId, depositAmount);
+        walletService.deposit(userId, amount);
 
-        assertEquals(new BigDecimal("100.00"), usdtItem.getAmount());
-        assertEquals(new BigDecimal("100.00"), usdtItem.getAvailableBalance());
-        verify(walletRepository, times(1)).save(wallet);
+        assertEquals(new BigDecimal("150.00"), item.getAmount());
+        assertEquals(new BigDecimal("150.00"), item.getAvailableBalance());
+        verify(walletRepository).save(wallet);
     }
 
     @Test
     void shouldThrowException_WhenDepositAmountIsNegative() {
-        Long userId = 1L;
+        Long id = 1L;
         BigDecimal negativeAmount = new BigDecimal("-50.00");
 
         assertThrows(InvalidAmountException.class, () -> {
-            walletService.deposit(userId, negativeAmount);
+            walletService.deposit(id, negativeAmount);
         });
 
         verify(walletRepository, never()).save(any());
     }
 
     @Test
-    void shouldThrowException_WhenUSDT_AssetNotFoundInWallet() {
-        Long userId = 1L;
+    void shouldDeposit_CreateUSDT() {
+        Long id = 1L;
         Wallet wallet = new Wallet();
         wallet.setWalletItems(new ArrayList<>());
 
-        when(walletRepository.findByUserId(userId)).thenReturn(Optional.of(wallet));
+        Asset assetUSDT = new Asset(); assetUSDT.setAssetSymbol("USDT");
 
-        assertThrows(WalletAssetNotFoundException.class, () -> {
-            walletService.deposit(userId, new BigDecimal("10.00"));
-        });
+        when(walletRepository.findByUserId(id)).thenReturn(Optional.of(wallet));
+        when(assetService.getOrCreateAsset("USDT", "Tether")).thenReturn(assetUSDT);
+
+        walletService.deposit(id, new BigDecimal("100.00"));
+
+        assertFalse(wallet.getWalletItems().isEmpty());
+        assertEquals("USDT", wallet.getWalletItems().get(0).getAsset().getAssetSymbol());
+        assertEquals(new BigDecimal("100.00"), wallet.getWalletItems().get(0).getAmount());
+    }
+
+    @Test
+    void shouldThrowException_WhenDepositNegativeAmount() {
+        assertThrows(InvalidAmountException.class,
+                () -> walletService.deposit(1L, new BigDecimal("-10.00")));
+
+        verify(walletRepository, never()).save(any());
+    }
+
+    @Test
+    void shouldTrade_Success_ExistingReceiveAsset() {
+        Long id = 1L;
+        Wallet wallet = new Wallet();
+        wallet.setWalletItems(new ArrayList<>());
+
+        Asset assetUSDT = new Asset(); assetUSDT.setAssetSymbol("USDT");
+        Asset assetBTC = new Asset(); assetBTC.setAssetSymbol("BTC");
+
+        WalletItem usdtItem = new WalletItem(1L, wallet, assetUSDT, new BigDecimal("100"), new BigDecimal("100"), BigDecimal.ZERO);
+        WalletItem btcItem = new WalletItem(2L, wallet, assetBTC, new BigDecimal("0.5"), new BigDecimal("0.5"), BigDecimal.ZERO);
+
+        wallet.getWalletItems().add(usdtItem);
+        wallet.getWalletItems().add(btcItem);
+
+        when(walletRepository.findByUserId(id)).thenReturn(Optional.of(wallet));
+
+        walletService.trade(id, assetUSDT, assetBTC, new BigDecimal("50"), new BigDecimal("0.1"));
+
+        assertEquals(new BigDecimal("50"), usdtItem.getAmount());
+        assertEquals(new BigDecimal("0.6"), btcItem.getAmount());
+        verify(walletRepository).save(wallet);
+    }
+
+    @Test
+    void shouldTrade_Success_CreateNewReceiveAsset() {
+        Long id = 1L;
+        Wallet wallet = new Wallet();
+        wallet.setWalletItems(new ArrayList<>());
+
+        Asset assetUSDT = new Asset(); assetUSDT.setAssetSymbol("USDT");
+        Asset assetDOGE = new Asset(); assetDOGE.setAssetSymbol("DOGE");
+
+        WalletItem usdtItem = new WalletItem(1L, wallet, assetUSDT, new BigDecimal("100"), new BigDecimal("100"), BigDecimal.ZERO);
+        wallet.getWalletItems().add(usdtItem);
+
+        when(walletRepository.findByUserId(id)).thenReturn(Optional.of(wallet));
+
+        walletService.trade(id, assetUSDT, assetDOGE, new BigDecimal("10"), new BigDecimal("500"));
+
+        assertEquals(new BigDecimal("90"), usdtItem.getAmount());
+        assertEquals(2, wallet.getWalletItems().size());
+        WalletItem dogeItem = wallet.getWalletItems().stream()
+                .filter(i -> i.getAsset().getAssetSymbol().equals("DOGE"))
+                .findFirst().orElseThrow();
+        assertEquals(new BigDecimal("500"), dogeItem.getAmount());
+    }
+
+    @Test
+    void shouldThrowException_WhenInsufficientFunds() {
+        Long id = 1L;
+        Wallet wallet = new Wallet();
+        wallet.setWalletItems(new ArrayList<>());
+
+        Asset assetUSDT = new Asset(); assetUSDT.setAssetSymbol("USDT");
+        Asset assetBTC = new Asset(); assetBTC.setAssetSymbol("BTC");
+
+        WalletItem usdtItem = new WalletItem(1L, wallet, assetUSDT, new BigDecimal("10"), new BigDecimal("10"), BigDecimal.ZERO);
+        wallet.getWalletItems().add(usdtItem);
+
+        when(walletRepository.findByUserId(id)).thenReturn(Optional.of(wallet));
+
+        RuntimeException ex = assertThrows(RuntimeException.class, () ->
+                walletService.trade(id, assetUSDT, assetBTC, new BigDecimal("50"), new BigDecimal("1"))
+        );
+
+        assertTrue(ex.getMessage().contains("Insufficient funds"));
+        assertEquals(1, wallet.getWalletItems().size());
+    }
+
+    @Test
+    void shouldThrowException_WhenAssetToSpend_NotFound() {
+        Long id = 1L;
+        Wallet wallet = new Wallet();
+        wallet.setWalletItems(new ArrayList<>());
+
+        Asset assetUSDT = new Asset(); assetUSDT.setAssetSymbol("USDT");
+        WalletItem usdtItem = new WalletItem(1L, wallet, assetUSDT, new BigDecimal("100"), new BigDecimal("100"), BigDecimal.ZERO);
+        wallet.getWalletItems().add(usdtItem);
+
+        Asset eth = new Asset(); eth.setAssetSymbol("ETH");
+        Asset btc = new Asset(); btc.setAssetSymbol("BTC");
+
+        when(walletRepository.findByUserId(id)).thenReturn(Optional.of(wallet));
+
+        assertThrows(WalletAssetNotFoundException.class, () ->
+                walletService.trade(id, eth, btc, new BigDecimal("10"), new BigDecimal("1"))
+        );
     }
 }

@@ -14,13 +14,13 @@ import static org.mockito.Mockito.*;
 
 
 @ExtendWith(MockitoExtension.class)
-public class AssetServiceTest {
+class AssetServiceTest {
 
     @Mock
-    private AssetRepository assetRepository;
+    AssetRepository assetRepository;
 
     @InjectMocks
-    private AssetService assetService;
+    AssetService assetService;
 
     //CreateAsset
     @Test

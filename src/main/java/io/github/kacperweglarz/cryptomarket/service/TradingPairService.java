@@ -39,6 +39,7 @@ public class TradingPairService {
     public TradingPair getOrCreateTradingPair(String tradingPairSymbol) {
 
         TradingPair existing = tradingPairRepository.findByTradingPairSymbol(tradingPairSymbol);
+
         if (existing != null) {
             return existing;
         }
