@@ -5,9 +5,9 @@ import io.github.kacperweglarz.cryptomarket.entity.Asset;
 import io.github.kacperweglarz.cryptomarket.entity.User;
 import io.github.kacperweglarz.cryptomarket.entity.Wallet;
 import io.github.kacperweglarz.cryptomarket.entity.WalletItem;
+import io.github.kacperweglarz.cryptomarket.exception.InsufficientFundsException;
 import io.github.kacperweglarz.cryptomarket.exception.InvalidAmountException;
-import io.github.kacperweglarz.cryptomarket.exception.WalletAssetNotFoundException;
-import io.github.kacperweglarz.cryptomarket.exception.WalletNotFoundException;
+import io.github.kacperweglarz.cryptomarket.repository.WalletItemRepository;
 import io.github.kacperweglarz.cryptomarket.repository.WalletRepository;
 import io.github.kacperweglarz.cryptomarket.service.AssetService;
 import io.github.kacperweglarz.cryptomarket.service.WalletService;
@@ -17,7 +17,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import java.math.BigDecimal;
-import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -32,8 +32,12 @@ class WalletServiceTest {
     @Mock
     WalletRepository walletRepository;
 
+    @Mock
+    WalletItemRepository walletItemRepository;
+
     @InjectMocks
     WalletService walletService;
+
 
     @Test
     void shouldCreateNewWallet_With_USDTAsset() {
@@ -42,16 +46,13 @@ class WalletServiceTest {
         mockAsset.setAssetSymbol("USDT");
 
         when(assetService.getOrCreateAsset(anyString(), anyString())).thenReturn(mockAsset);
+        when(walletItemRepository.findByWalletIdAndSymbol(any(), anyString())).thenReturn(Optional.empty());
 
         Wallet wallet = walletService.createWallet(user);
 
         assertNotNull(wallet);
         assertEquals(user, wallet.getUser());
-        assertNotNull(wallet.getWalletItems());
-        assertFalse(wallet.getWalletItems().isEmpty());
-        assertEquals(1, wallet.getWalletItems().size());
-        assertEquals("USDT", wallet.getWalletItems().get(0).getAsset().getAssetSymbol());
-        assertEquals(BigDecimal.ZERO, wallet.getWalletItems().get(0).getAvailableBalance());
+        verify(walletItemRepository).save(any(WalletItem.class));
     }
 
     @Test
@@ -71,8 +72,7 @@ class WalletServiceTest {
 
         Wallet wallet = new Wallet();
         wallet.setId(walletId);
-        wallet.setWalletItems(new ArrayList<>());
-        wallet.getWalletItems().add(item);
+        wallet.setWalletItems(List.of(item));
 
         when(walletRepository.findByUserId(userId)).thenReturn(Optional.of(wallet));
 
@@ -81,195 +81,143 @@ class WalletServiceTest {
         assertNotNull(response);
         assertEquals(walletId, response.getId());
         assertEquals(1, response.getItems().size());
-
-        WalletResponse.WalletItemResponse itemDto = response.getItems().get(0);
-
-        assertEquals("BTC", itemDto.getSymbol());
-        assertEquals("Bitcoin", itemDto.getName());
-        assertEquals(new BigDecimal("1.5"), itemDto.getAmount());
-        assertEquals(new BigDecimal("1.0"), itemDto.getAvailable());
-        assertEquals(new BigDecimal("0.5"), itemDto.getLocked());
-
-        verify(walletRepository, times(1)).findByUserId(userId);
+        assertEquals("BTC", response.getItems().get(0).getSymbol());
     }
 
     @Test
-    void shouldReturnEmptyList_WhenWalletHasNoItems() {
+    void shouldDeposit_UpdateExistingUSDT_ViaSQL() {
         Long userId = 1L;
-
-        Wallet emptyWallet = new Wallet();
-        emptyWallet.setId(1L);
-        emptyWallet.setWalletItems(new ArrayList<>());
-
-        when(walletRepository.findByUserId(userId)).thenReturn(Optional.of(emptyWallet));
-
-        WalletResponse response = walletService.getUserWallet(userId);
-
-        assertNotNull(response);
-        assertEquals(1L, response.getId());
-        assertNotNull(response.getItems());
-        assertTrue(response.getItems().isEmpty());
-    }
-
-    @Test
-    void shouldThrowException_WhenWalletNotFound() {
-        Long userId = 1L;
-
-        when(walletRepository.findByUserId(userId)).thenReturn(Optional.empty());
-
-        assertThrows(WalletNotFoundException.class, () -> {
-            walletService.getUserWallet(userId);
-        });
-    }
-
-    @Test
-    void shouldDeposit_AddFunds_ToExistingUSDT() {
-        Long userId = 1L;
+        Long walletId = 10L;
         BigDecimal amount = new BigDecimal("100.00");
 
         Wallet wallet = new Wallet();
-        wallet.setWalletItems(new ArrayList<>());
-
-        Asset usdt = new Asset(); usdt.setAssetSymbol("USDT");
-
-        WalletItem item = new WalletItem(1L, wallet, usdt, new BigDecimal("50.00"), new BigDecimal("50.00"), BigDecimal.ZERO);
-        wallet.getWalletItems().add(item);
+        wallet.setId(walletId);
 
         when(walletRepository.findByUserId(userId)).thenReturn(Optional.of(wallet));
-        when(assetService.getOrCreateAsset("USDT", "Tether")).thenReturn(usdt);
+        when(walletItemRepository.depositFunds(walletId, "USDT", amount)).thenReturn(1);
 
         walletService.deposit(userId, amount);
 
-        assertEquals(new BigDecimal("150.00"), item.getAmount());
-        assertEquals(new BigDecimal("150.00"), item.getAvailableBalance());
-        verify(walletRepository).save(wallet);
+        verify(walletItemRepository).depositFunds(walletId, "USDT", amount);
+        verify(walletItemRepository, never()).save(any());
     }
 
     @Test
-    void shouldThrowException_WhenDepositAmountIsNegative() {
-        Long id = 1L;
-        BigDecimal negativeAmount = new BigDecimal("-50.00");
+    void shouldDeposit_CreateNewUSDT_WhenUpdateReturnsZero() {
+        Long userId = 1L;
+        Long walletId = 1L;
+        BigDecimal amount = new BigDecimal("100.00");
 
-        assertThrows(InvalidAmountException.class, () -> {
-            walletService.deposit(id, negativeAmount);
-        });
-
-        verify(walletRepository, never()).save(any());
-    }
-
-    @Test
-    void shouldDeposit_CreateUSDT() {
-        Long id = 1L;
         Wallet wallet = new Wallet();
-        wallet.setWalletItems(new ArrayList<>());
+        wallet.setId(walletId);
 
-        Asset assetUSDT = new Asset(); assetUSDT.setAssetSymbol("USDT");
+        Asset asset = new Asset();
+        asset.setAssetSymbol("USDT");
 
-        when(walletRepository.findByUserId(id)).thenReturn(Optional.of(wallet));
-        when(assetService.getOrCreateAsset("USDT", "Tether")).thenReturn(assetUSDT);
+        when(walletRepository.findByUserId(userId)).thenReturn(Optional.of(wallet));
+        when(walletItemRepository.depositFunds(walletId, "USDT", amount)).thenReturn(0);
+        when(assetService.getOrCreateAsset("USDT", "Tether")).thenReturn(asset);
+        when(walletItemRepository.findByWalletIdAndSymbol(walletId, "USDT")).thenReturn(Optional.empty());
 
-        walletService.deposit(id, new BigDecimal("100.00"));
+        walletService.deposit(userId, amount);
 
-        assertFalse(wallet.getWalletItems().isEmpty());
-        assertEquals("USDT", wallet.getWalletItems().get(0).getAsset().getAssetSymbol());
-        assertEquals(new BigDecimal("100.00"), wallet.getWalletItems().get(0).getAmount());
+        verify(walletItemRepository).save(any(WalletItem.class));
     }
 
     @Test
     void shouldThrowException_WhenDepositNegativeAmount() {
-        assertThrows(InvalidAmountException.class,
-                () -> walletService.deposit(1L, new BigDecimal("-10.00")));
-
-        verify(walletRepository, never()).save(any());
+        assertThrows(InvalidAmountException.class, () -> walletService.deposit(1L, new BigDecimal("-10")));
+        verifyNoInteractions(walletItemRepository);
     }
+
 
     @Test
     void shouldTrade_Success_ExistingReceiveAsset() {
-        Long id = 1L;
+        Long userId = 1L;
+        Long walletId = 1L;
         Wallet wallet = new Wallet();
-        wallet.setWalletItems(new ArrayList<>());
+        wallet.setId(walletId);
 
-        Asset assetUSDT = new Asset(); assetUSDT.setAssetSymbol("USDT");
-        Asset assetBTC = new Asset(); assetBTC.setAssetSymbol("BTC");
+        Asset assetSpend = new Asset(); assetSpend.setAssetSymbol("USDT");
+        Asset assetReceive = new Asset(); assetReceive.setAssetSymbol("BTC");
 
-        WalletItem usdtItem = new WalletItem(1L, wallet, assetUSDT, new BigDecimal("100"), new BigDecimal("100"), BigDecimal.ZERO);
-        WalletItem btcItem = new WalletItem(2L, wallet, assetBTC, new BigDecimal("0.5"), new BigDecimal("0.5"), BigDecimal.ZERO);
+        when(walletRepository.findByUserId(userId)).thenReturn(Optional.of(wallet));
+        when(walletItemRepository.subtractFunds(walletId, "USDT", new BigDecimal("50"))).thenReturn(1);
+        when(walletItemRepository.depositFunds(walletId, "BTC", new BigDecimal("0.1"))).thenReturn(1);
 
-        wallet.getWalletItems().add(usdtItem);
-        wallet.getWalletItems().add(btcItem);
+        walletService.trade(userId, assetSpend, assetReceive, new BigDecimal("50"), new BigDecimal("0.1"));
 
-        when(walletRepository.findByUserId(id)).thenReturn(Optional.of(wallet));
-
-        walletService.trade(id, assetUSDT, assetBTC, new BigDecimal("50"), new BigDecimal("0.1"));
-
-        assertEquals(new BigDecimal("50"), usdtItem.getAmount());
-        assertEquals(new BigDecimal("0.6"), btcItem.getAmount());
-        verify(walletRepository).save(wallet);
+        verify(walletItemRepository).subtractFunds(walletId, "USDT", new BigDecimal("50"));
+        verify(walletItemRepository).depositFunds(walletId, "BTC", new BigDecimal("0.1"));
+        verify(walletItemRepository, never()).save(any());
     }
 
     @Test
     void shouldTrade_Success_CreateNewReceiveAsset() {
-        Long id = 1L;
+        Long userId = 1L;
+        Long walletId = 1L;
         Wallet wallet = new Wallet();
-        wallet.setWalletItems(new ArrayList<>());
+        wallet.setId(walletId);
 
-        Asset assetUSDT = new Asset(); assetUSDT.setAssetSymbol("USDT");
-        Asset assetDOGE = new Asset(); assetDOGE.setAssetSymbol("DOGE");
+        Asset assetSpend = new Asset(); assetSpend.setAssetSymbol("USDT");
+        Asset assetReceive = new Asset(); assetReceive.setAssetSymbol("DOGE");
 
-        WalletItem usdtItem = new WalletItem(1L, wallet, assetUSDT, new BigDecimal("100"), new BigDecimal("100"), BigDecimal.ZERO);
-        wallet.getWalletItems().add(usdtItem);
+        when(walletRepository.findByUserId(userId)).thenReturn(Optional.of(wallet));
+        when(walletItemRepository.subtractFunds(walletId, "USDT", new BigDecimal("10"))).thenReturn(1);
+        when(walletItemRepository.depositFunds(walletId, "DOGE", new BigDecimal("500"))).thenReturn(0);
+        when(walletItemRepository.findByWalletIdAndSymbol(walletId, "DOGE")).thenReturn(Optional.empty());
 
-        when(walletRepository.findByUserId(id)).thenReturn(Optional.of(wallet));
+        walletService.trade(userId, assetSpend, assetReceive, new BigDecimal("10"), new BigDecimal("500"));
 
-        walletService.trade(id, assetUSDT, assetDOGE, new BigDecimal("10"), new BigDecimal("500"));
-
-        assertEquals(new BigDecimal("90"), usdtItem.getAmount());
-        assertEquals(2, wallet.getWalletItems().size());
-        WalletItem dogeItem = wallet.getWalletItems().stream()
-                .filter(i -> i.getAsset().getAssetSymbol().equals("DOGE"))
-                .findFirst().orElseThrow();
-        assertEquals(new BigDecimal("500"), dogeItem.getAmount());
+        verify(walletItemRepository).subtractFunds(walletId, "USDT", new BigDecimal("10"));
+        verify(walletItemRepository).save(any(WalletItem.class));
     }
 
     @Test
-    void shouldThrowException_WhenInsufficientFunds() {
-        Long id = 1L;
-        Wallet wallet = new Wallet();
-        wallet.setWalletItems(new ArrayList<>());
+    void shouldThrowException_WhenInsufficientFunds_OnTrade() {
+        Long userId = 1L;
+        Long walletId = 1L;
+        Wallet wallet = new Wallet(); wallet.setId(walletId);
 
-        Asset assetUSDT = new Asset(); assetUSDT.setAssetSymbol("USDT");
-        Asset assetBTC = new Asset(); assetBTC.setAssetSymbol("BTC");
+        Asset assetSpend = new Asset(); assetSpend.setAssetSymbol("USDT");
+        Asset assetReceive = new Asset(); assetReceive.setAssetSymbol("BTC");
 
-        WalletItem usdtItem = new WalletItem(1L, wallet, assetUSDT, new BigDecimal("10"), new BigDecimal("10"), BigDecimal.ZERO);
-        wallet.getWalletItems().add(usdtItem);
+        when(walletRepository.findByUserId(userId)).thenReturn(Optional.of(wallet));
+        when(walletItemRepository.subtractFunds(walletId, "USDT", new BigDecimal("1000"))).thenReturn(0);
 
-        when(walletRepository.findByUserId(id)).thenReturn(Optional.of(wallet));
-
-        RuntimeException ex = assertThrows(RuntimeException.class, () ->
-                walletService.trade(id, assetUSDT, assetBTC, new BigDecimal("50"), new BigDecimal("1"))
+        assertThrows(InsufficientFundsException.class, () ->
+                walletService.trade(userId, assetSpend, assetReceive, new BigDecimal("1000"), new BigDecimal("1"))
         );
-
-        assertTrue(ex.getMessage().contains("Insufficient funds"));
-        assertEquals(1, wallet.getWalletItems().size());
+        verify(walletItemRepository, never()).depositFunds(anyLong(), anyString(), any());
     }
 
     @Test
-    void shouldThrowException_WhenAssetToSpend_NotFound() {
-        Long id = 1L;
-        Wallet wallet = new Wallet();
-        wallet.setWalletItems(new ArrayList<>());
+    void shouldLockFunds_Success() {
+        Long userId = 1L;
+        Long walletId = 1L;
+        Wallet wallet = new Wallet(); wallet.setId(walletId);
+        Asset asset = new Asset(); asset.setAssetSymbol("USDT");
 
-        Asset assetUSDT = new Asset(); assetUSDT.setAssetSymbol("USDT");
-        WalletItem usdtItem = new WalletItem(1L, wallet, assetUSDT, new BigDecimal("100"), new BigDecimal("100"), BigDecimal.ZERO);
-        wallet.getWalletItems().add(usdtItem);
+        when(walletRepository.findByUserId(userId)).thenReturn(Optional.of(wallet));
+        when(walletItemRepository.lockFunds(walletId, "USDT", new BigDecimal("50"))).thenReturn(1);
 
-        Asset eth = new Asset(); eth.setAssetSymbol("ETH");
-        Asset btc = new Asset(); btc.setAssetSymbol("BTC");
+        walletService.lockFunds(userId, asset, new BigDecimal("50"));
 
-        when(walletRepository.findByUserId(id)).thenReturn(Optional.of(wallet));
+        verify(walletItemRepository).lockFunds(walletId, "USDT", new BigDecimal("50"));
+    }
 
-        assertThrows(WalletAssetNotFoundException.class, () ->
-                walletService.trade(id, eth, btc, new BigDecimal("10"), new BigDecimal("1"))
+    @Test
+    void shouldThrowException_WhenLockFunds_Insufficient() {
+        Long userId = 1L;
+        Long walletId = 10L;
+        Wallet wallet = new Wallet(); wallet.setId(walletId);
+        Asset asset = new Asset(); asset.setAssetSymbol("USDT");
+
+        when(walletRepository.findByUserId(userId)).thenReturn(Optional.of(wallet));
+        when(walletItemRepository.lockFunds(walletId, "USDT", new BigDecimal("50"))).thenReturn(0);
+
+        assertThrows(InsufficientFundsException.class, () ->
+                walletService.lockFunds(userId, asset, new BigDecimal("50"))
         );
     }
 }

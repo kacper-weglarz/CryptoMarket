@@ -1,6 +1,7 @@
 package io.github.kacperweglarz.cryptomarket.service;
 
 import io.github.kacperweglarz.cryptomarket.DTO.request.SpotOrderRequest;
+import io.github.kacperweglarz.cryptomarket.DTO.response.OrderResponse;
 import io.github.kacperweglarz.cryptomarket.entity.Asset;
 import io.github.kacperweglarz.cryptomarket.entity.Order;
 import io.github.kacperweglarz.cryptomarket.entity.TradingPair;
@@ -19,6 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.List;
 
 @Service
 public class OrderService {
@@ -40,9 +42,9 @@ public class OrderService {
     }
 
     @Transactional
-    public void placeOrder(Long id, SpotOrderRequest request){
+    public OrderResponse placeSpotOrder(Long id, SpotOrderRequest request){
         User user = userRepository.findById(id)
-                .orElseThrow(() -> new UserNotFoundException("User not found"));
+                .orElseThrow(() -> new UserNotFoundException(""));
 
         TradingPair tradingPair = tradingPairService.getOrCreateTradingPair(request.getSymbol());
 
@@ -55,7 +57,7 @@ public class OrderService {
 
         if (request.getOrderType() == OrderType.LIMIT) {
             if (request.getPrice() == null) {
-                throw new InvalidAmountException("Price is null in LIMIT order");
+                throw new InvalidAmountException("");
             }
 
             Asset assetToLock;
@@ -75,9 +77,20 @@ public class OrderService {
             order.setStatus(OrderStatus.PENDING);
             orderRepository.save(order);
 
+            return new OrderResponse(
+                    order.getId(),
+                    order.getTradingPair().getTradingPairSymbol(),
+                    order.getType(),
+                    order.getSide(),
+                    order.getAmount(),
+                    order.getPrice(),
+                    order.getStatus(),
+                    order.getCreatedAt()
+            );
+
         } else {
 
-            BigDecimal currentPrice = marketDataService.getCurrentPrice(request.getSymbol());
+            BigDecimal currentPrice = new BigDecimal("91000"); //marketDataService.getCurrentPrice(request.getSymbol());
 
             if (currentPrice == null || currentPrice.compareTo(BigDecimal.ZERO) <= 0) {
                 throw new PriceNotFoundException(request.getSymbol());
@@ -103,6 +116,32 @@ public class OrderService {
             order.setPrice(currentPrice);
             order.setStatus(OrderStatus.FILLED);
             orderRepository.save(order);
+
+            return new OrderResponse(
+                    order.getId(),
+                    order.getTradingPair().getTradingPairSymbol(),
+                    order.getType(),
+                    order.getSide(),
+                    order.getAmount(),
+                    order.getPrice(),
+                    order.getStatus(),
+                    order.getCreatedAt()
+            );
         }
+    }
+
+    public List<OrderResponse> getUserOrders(Long userId) {
+        return orderRepository.findByUserIdOrderByIdDesc(userId).stream()
+                .map(order -> new OrderResponse(
+                        order.getId(),
+                        order.getTradingPair().getTradingPairSymbol(),
+                        order.getType(),
+                        order.getSide(),
+                        order.getAmount(),
+                        order.getPrice(),
+                        order.getStatus(),
+                        order.getCreatedAt()
+                ))
+                .toList();
     }
 }

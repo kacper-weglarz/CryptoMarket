@@ -30,7 +30,7 @@ public class WalletController {
         String email = authentication.getName();
 
         User user = userService.findUserByEmail(email)
-                .orElseThrow(() -> new UserNotFoundException("User not found"));
+                .orElseThrow(() -> new UserNotFoundException(""));
 
         WalletResponse response = walletService.getUserWallet(user.getId());
 
@@ -38,15 +38,17 @@ public class WalletController {
     }
 
     @PostMapping
-    public ResponseEntity<String> deposit(@RequestBody DepositRequest depositRequest, Authentication authentication) {
+    public ResponseEntity<WalletResponse> deposit(@RequestBody DepositRequest depositRequest, Authentication authentication) {
 
         String email = authentication.getName();
 
         User user = userService.findUserByEmail(email)
-                .orElseThrow(() -> new UserNotFoundException("User not found"));
+                .orElseThrow(() -> new UserNotFoundException(""));
 
         walletService.deposit(user.getId(), depositRequest.getAmount());
 
-        return ResponseEntity.ok("Pomyślnie wpłacono: " + depositRequest.getAmount() + " USDT");
+        WalletResponse response = walletService.getUserWallet(user.getId());
+
+        return ResponseEntity.ok(response);
     }
 }
