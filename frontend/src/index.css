@@ -1,68 +1,83 @@
+@import "tailwindcss";
+
+/* === ZMIENNE KOLORÓW === */
+
 :root {
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
-  line-height: 1.5;
-  font-weight: 400;
+    /* --- CIEMNY MOTYW (DOMYŚLNY) --- */
+    --bg-app: #09090b;
+    --text-app: #e4e4e7;
+    --text-muted: #a1a1aa;
 
-  color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
+    /* Jeśli chcesz lekką poświatę (mgłę), zmień transparent na np. rgba(255,255,255,0.03) */
+    --gradient-color: transparent;
 
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+    --nav-bg: rgba(9, 9, 11, 0.5);
+    --nav-border: rgba(39, 39, 42, 0.4);
+
+    --btn-bg: #f4f4f5;
+    --btn-text: #09090b;
 }
 
-a {
-  font-weight: 500;
-  color: #646cff;
-  text-decoration: inherit;
+:root.light {
+    /* --- JASNY MOTYW --- */
+    --bg-app: #fafafa;
+    --nav-bg: #ffffff;
+    --nav-border: #e4e4e7;
+
+    --text-app: #09090b;
+    --text-muted: #52525b;
+
+    --gradient-color: rgba(0, 0, 0, 0.02);
+
+    --btn-bg: #09090b;
+    --btn-text: #ffffff;
 }
-a:hover {
-  color: #535bf2;
+
+@theme {
+    --font-display: 'Outfit', sans-serif;
+    --font-mono: 'JetBrains Mono', monospace;
+
+    /* Mapowanie zmiennych do klas Tailwinda */
+    --color-zinc-975: var(--bg-app);
+    --color-zinc-100: var(--text-app);
+    --color-zinc-400: var(--text-muted);
+
+    --color-nav-bg: var(--nav-bg);
+    --color-nav-border: var(--nav-border);
+    --color-btn-bg: var(--btn-bg);
+    --color-btn-text: var(--btn-text);
 }
 
 body {
-  margin: 0;
-  display: flex;
-  place-items: center;
-  min-width: 320px;
-  min-height: 100vh;
+    background-color: var(--bg-app);
+    color: var(--text-app);
+    font-family: var(--font-display);
+    overflow-x: hidden;
+    transition: background-color 0.3s ease, color 0.3s ease;
 }
 
-h1 {
-  font-size: 3.2em;
-  line-height: 1.1;
+/* === SZUM (NOISE TEXTURE) === */
+.noise-overlay {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 50;
+
+    /* TUTAJ JEST ZMIANA: Zwiększamy opacity, żeby szum był widoczny */
+    opacity: 0.05;
+
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
 }
 
-button {
-  border-radius: 8px;
-  border: 1px solid transparent;
-  padding: 0.6em 1.2em;
-  font-size: 1em;
-  font-weight: 500;
-  font-family: inherit;
-  background-color: #1a1a1a;
-  cursor: pointer;
-  transition: border-color 0.25s;
-}
-button:hover {
-  border-color: #646cff;
-}
-button:focus,
-button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
+/* W jasnym motywie odwracamy kolory szumu, żeby był widoczny na białym */
+:root.light .noise-overlay {
+    opacity: 0.05;
+    filter: invert(1);
+    mix-blend-mode: multiply;
 }
 
-@media (prefers-color-scheme: light) {
-  :root {
-    color: #213547;
-    background-color: #ffffff;
-  }
-  a:hover {
-    color: #747bff;
-  }
-  button {
-    background-color: #f9f9f9;
-  }
-}
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background-color: #3f3f46; border-radius: 9999px; }
+::-webkit-scrollbar-thumb:hover { background-color: #52525b; }
