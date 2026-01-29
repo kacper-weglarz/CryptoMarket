@@ -1,31 +1,33 @@
+import { Routes, Route, useLocation } from 'react-router-dom'; // <--- DODAJ useLocation
 import { Navbar } from './components/Navbar';
-import { Features } from './components/Features';
-import { Ticker } from './components/Ticker';
-import { Hero } from './components/Hero';
+import { Home } from './pages/Home';
+
 import { cn } from './utils/utils';
 
 function App() {
+    const location = useLocation();
+    const isHomePage = location.pathname === '/';
+
     return (
         <div className="min-h-screen relative overflow-hidden bg-[var(--bg-app)] text-[var(--text-app)]">
+
             <div className="noise-overlay" />
-            <div
-                className={cn(
-                    'fixed inset-0 z-0',
-                    'bg-[radial-gradient(ellipse_80%_50%_at_50%_-20%,var(--gradient-color),transparent)]'
-                )}
+            <div className={cn(
+                'fixed inset-0 z-0',
+                'bg-[radial-gradient(ellipse_80%_50%_at_50%_-20%,var(--gradient-color),transparent)]'
+            )}
             />
-            <Navbar />
 
-            <main className="relative z-10 flex flex-col gap-0 pt-24">
+            {isHomePage && <Navbar />}
 
-                <Hero/>
-
-                <Ticker />
-
-                <Features />
-
-                <div className="h-20"></div>
-
+            <main className={cn(
+                "relative z-10",
+                isHomePage ? "pt-20" : ""
+            )}>
+                <Routes>
+                    <Route path="/" element={<Home />} />
+                    <Route path="/login"  />
+                </Routes>
             </main>
 
         </div>
