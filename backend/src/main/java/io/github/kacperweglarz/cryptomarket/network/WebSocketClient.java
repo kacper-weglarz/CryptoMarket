@@ -7,29 +7,46 @@ import jakarta.annotation.PostConstruct;
 import jakarta.websocket.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 import java.math.BigDecimal;
 import java.net.URI;
+import java.util.Arrays;
+import java.util.stream.Collectors;
 
 @Component
 @ClientEndpoint
 @Slf4j
+@Profile("!test")
 public class WebSocketClient {
 
     private final MarketDataService marketDataService;
     private final ObjectMapper mapper = new ObjectMapper();
     private Session session;
 
+    private final String[] symbols = {
+            "btcusdt", "ethusdt", "bnbusdt", "solusdt",
+            "xrpusdt", "adausdt", "avaxusdt", "dogeusdt",
+            "shibusdt", "pepeusdt"
+    };
+
     @Autowired
     public WebSocketClient(MarketDataService marketDataService) {
         this.marketDataService = marketDataService;
     }
 
-    //@PostConstruct
+    @PostConstruct
     public void connect() {
         try {
             WebSocketContainer container = ContainerProvider.getWebSocketContainer();
-            String uri = "wss://stream.binance.com:9443/ws/btcusdt@aggTrade";
+
+            String streams = Arrays.stream(symbols)
+                    .map(s -> s + "@ticker")
+                    .collect(Collectors.joining("/"));
+
+            String uri = "wss://stream.binance.com:9443/stream?streams=" + streams;
+
+            log.info("Connecting to Binance WebSocket: {}", uri);
 
             container.connectToServer(this, URI.create(uri));
 
@@ -51,12 +68,18 @@ public class WebSocketClient {
         try {
             JsonNode node = mapper.readTree(message);
 
+            if (!node.has("data")) {
+                return;
+            }
+
+            JsonNode dataNode = node.get("data");
+
+            String rawSymbol = dataNode.get("s").asText();
+            BigDecimal price = new BigDecimal(dataNode.get("c").asText());
+            BigDecimal change = new BigDecimal(dataNode.get("P").asText());
+            BigDecimal volume = new BigDecimal(dataNode.get("v").asText());
+
             log.trace("Raw message received: {}", message);
-
-            String rawSymbol = node.get("s").asText();
-
-            BigDecimal price = new BigDecimal(node.get("p").asText());
-            BigDecimal volume = new BigDecimal(node.get("q").asText());
 
             String fixedSymbol = rawSymbol;
 
@@ -68,7 +91,7 @@ public class WebSocketClient {
                 fixedSymbol = base + "/" + quote;
             }
 
-            marketDataService.updatePrices(fixedSymbol, price, volume);
+            marketDataService.updatePrices(fixedSymbol, price, volume, change);
 
             log.debug("Price updated for {}: {}", fixedSymbol, price);
 

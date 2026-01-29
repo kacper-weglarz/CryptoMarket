@@ -52,6 +52,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(authHttpRequest -> authHttpRequest
                         //.requestMatchers("/").permitAll()
                         .requestMatchers("/api/v1/auth/**").permitAll()
+                        .requestMatchers("/ws-public/**").permitAll()
                         .anyRequest().authenticated());
         http.addFilterBefore(authTokenFilter, UsernamePasswordAuthenticationFilter.class);
 

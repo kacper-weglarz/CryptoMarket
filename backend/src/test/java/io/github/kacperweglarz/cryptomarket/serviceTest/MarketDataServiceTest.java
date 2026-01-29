@@ -10,6 +10,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
+
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -29,6 +31,9 @@ class MarketDataServiceTest {
     @InjectMocks
     MarketDataService marketDataService;
 
+    @Mock
+    SimpMessagingTemplate messagingTemplate;
+
 
     @Test
     void shouldCreateNewCandle_And_KnownTradingPair() {
@@ -36,12 +41,13 @@ class MarketDataServiceTest {
         String symbol = "BTC/USDT";
         BigDecimal price = new BigDecimal(100);
         BigDecimal volume = new BigDecimal(1);
+        BigDecimal change = new BigDecimal(2);
         TradingPair tradingPair = new TradingPair();
         Instant now = Instant.now().truncatedTo(ChronoUnit.MINUTES);
 
         when(tradingPairService.getOrCreateTradingPair(symbol)).thenReturn(tradingPair);
 
-        MarketData marketData = marketDataService.updatePrices(symbol, price, volume);
+        MarketData marketData = marketDataService.updatePrices(symbol, price, volume, change);
 
         assertNotNull(marketData);
         assertEquals(marketData.getOpen(), price);
@@ -53,6 +59,7 @@ class MarketDataServiceTest {
         assertEquals(marketData.getTimestamp(), now);
 
         verify(tradingPairService, times(1)).getOrCreateTradingPair(symbol);
+        verify(messagingTemplate, times(1)).convertAndSend(eq("/topic/prices"), any(MarketDataService.PriceUpdateDto.class));
     }
 
     @Test
@@ -63,6 +70,8 @@ class MarketDataServiceTest {
         BigDecimal volume1 = new BigDecimal(1);
         BigDecimal price2 = new BigDecimal(110);
         BigDecimal volume2 = new BigDecimal(2);
+        BigDecimal change = new BigDecimal(2);
+        BigDecimal change2 = new BigDecimal(2);
         TradingPair pair = new TradingPair();
 
         Instant oldTimeStamp = Instant.now().minus(1, ChronoUnit.MINUTES);
@@ -70,11 +79,11 @@ class MarketDataServiceTest {
 
         when(tradingPairService.getOrCreateTradingPair(symbol)).thenReturn(pair);
 
-        MarketData oldCandle = marketDataService.updatePrices(symbol, price1, volume1);
+        MarketData oldCandle = marketDataService.updatePrices(symbol, price1, volume1, change);
 
         oldCandle.setTimestamp(oldTimeStamp);
 
-        MarketData marketData = marketDataService.updatePrices(symbol, price2, volume2);
+        MarketData marketData = marketDataService.updatePrices(symbol, price2, volume2, change2);
 
         verify(marketDataRepository).save(oldCandle);
 
@@ -96,14 +105,15 @@ class MarketDataServiceTest {
         BigDecimal newPrice = new BigDecimal(150);
         BigDecimal firstVolume = new BigDecimal(1);
         BigDecimal newVolume = new BigDecimal(12);
+        BigDecimal change = new BigDecimal(2);
         TradingPair tradingPair = new TradingPair();
         Instant now = Instant.now().truncatedTo(ChronoUnit.MINUTES);
 
         when(tradingPairService.getOrCreateTradingPair(symbol)).thenReturn(tradingPair);
 
-        marketDataService.updatePrices(symbol, firstPrice, firstVolume);
+        marketDataService.updatePrices(symbol, firstPrice, firstVolume, change);
 
-        MarketData marketData = marketDataService.updatePrices(symbol, newPrice, newVolume);
+        MarketData marketData = marketDataService.updatePrices(symbol, newPrice, newVolume, change);
 
         assertNotNull(marketData);
         assertEquals(marketData.getOpen(), firstPrice);

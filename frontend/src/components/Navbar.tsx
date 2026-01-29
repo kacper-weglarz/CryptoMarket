@@ -1,5 +1,7 @@
 import { Gem, Sun, Moon } from 'lucide-react';
 import { useTheme } from '../utils/useTheme';
+import { Link } from 'react-router-dom';
+
 
 export function Navbar() {
     const { theme, toggleTheme } = useTheme();
@@ -35,14 +37,18 @@ export function Navbar() {
                                 transition-colors hover:text-text-app">
                     {theme === 'light' ? <Moon className="h-5 w-5" /> : <Sun className="h-5 w-5" />}
                 </button>
+                <Link to="/login">
                 <button className="rounded-full bg-btn-bg px-8 py-3 text-base font-bold text-btn-text transition-all hover:scale-105
                                     hover:bg-emerald-400 hover:text-zinc-950 hover:shadow-lg hover:shadow-emerald-500/20 active:scale-95">
                     Zaloguj się
                 </button>
+                </Link>
+                <Link to="/register">
                 <button className="rounded-full bg-btn-bg px-8 py-3 text-base font-bold text-btn-text transition-all hover:scale-105
                                     hover:bg-emerald-400 hover:text-zinc-950 hover:shadow-lg hover:shadow-emerald-500/20 active:scale-95">
                     Zarejestruj się
                 </button>
+                </Link>
             </div>
         </nav>
     );

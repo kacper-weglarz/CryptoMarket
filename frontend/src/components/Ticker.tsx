@@ -1,53 +1,66 @@
+import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
+import { useCryptoPrices } from '../network/CryptoPriceContext';
 import { motion } from 'framer-motion';
-import { TrendingUp, TrendingDown } from 'lucide-react';
 
-const coins = [
-    { symbol: 'BTC', price: '$43,210.50', change: 2.4 },
-    { symbol: 'ETH', price: '$2,245.10', change: -0.8 },
-    { symbol: 'BNB', price: '$310.20', change: 1.2 },
-    { symbol: 'SOL', price: '$95.40', change: 5.7 },
-    { symbol: 'XRP', price: '$0.52', change: 1.1 },
-    { symbol: 'ADA', price: '$0.48', change: -0.5 },
-    { symbol: 'DOT', price: '$7.20', change: -1.1 },
-    { symbol: 'DOGE', price: '$0.08', change: 8.4 },
-    { symbol: 'AVAX', price: '$34.50', change: 3.2 },
+const TICKER_ASSETS = [
+    'BTC/USDT', 'ETH/USDT', 'SOL/USDT', 'BNB/USDT',
+    'ADA/USDT', 'XRP/USDT', 'DOGE/USDT'
 ];
 
 export function Ticker() {
+    const { prices } = useCryptoPrices();
+
+    const renderItem = (symbol: string, index: number) => {
+        const data = prices[symbol];
+        const rawPrice = data?.price || 0;
+        const rawChange = data?.change || 0;
+        const decimals = rawPrice < 1.0 && rawPrice > 0 ? 4 : 2;
+        const formattedPrice = rawPrice.toLocaleString('en-US', {
+            minimumFractionDigits: decimals,
+            maximumFractionDigits: decimals,
+        });
+        const formattedChange = Math.abs(rawChange).toFixed(2);
+
+        let colorClass = "text-zinc-500";
+        let Icon = Minus;
+
+        if (rawChange > 0) {
+            colorClass = "text-emerald-500";
+            Icon = TrendingUp;
+        } else if (rawChange < 0) {
+            colorClass = "text-red-500";
+            Icon = TrendingDown;
+        }
+
+        return (
+            <div key={`${symbol}-${index}`} className="flex items-center gap-3 mx-6 min-w-max">
+                <span className="font-bold text-[var(--text-app)] text-sm">
+                    {symbol.split('/')[0]}
+                </span>
+                <span className={`font-mono text-sm font-medium tabular-nums ${colorClass}`}>
+                    ${formattedPrice}
+                </span>
+                <span className={`flex items-center text-xs font-medium tabular-nums ${colorClass}`}>
+                    <Icon className="h-3 w-3 mr-1" />
+                    {rawChange > 0 ? '+' : rawChange < 0 ? '-' : ''}{formattedChange}%
+                </span>
+            </div>
+        );
+    };
+
     return (
-        <div className="relative flex w-full overflow-hidden border-y border-[var(--nav-border)] bg-[var(--nav-bg)]/50 py-3 backdrop-blur-sm">
-            <div className="absolute left-0 top-0 z-10 h-full w-24 bg-gradient-to-r from-[var(--bg-app)] to-transparent pointer-events-none" />
-            <div className="absolute right-0 top-0 z-10 h-full w-24 bg-gradient-to-l from-[var(--bg-app)] to-transparent pointer-events-none" />
+        <div className="w-full border-y border-[var(--nav-border)] bg-[var(--nav-bg)]/50 backdrop-blur-md overflow-hidden py-3 select-none">
             <motion.div
-                className="flex whitespace-nowrap"
+                className="flex w-max"
                 animate={{ x: "-50%" }}
                 transition={{
-                    repeat: Infinity,
                     ease: "linear",
-                    duration: 30,
+                    duration: 40,
+                    repeat: Infinity,
                 }}
-            >
-                {[...coins, ...coins].map((coin, i) => (
-                    <div key={i} className="mx-8 flex items-center gap-2 text-sm">
-                        <span className="font-bold text-[var(--text-app)]">
-              {coin.symbol}
-            </span>
-                        <span className="font-mono text-[var(--text-muted)]">
-              {coin.price}
-            </span>
-                        <span className={`flex items-center gap-1 font-medium ${
-                            coin.change >= 0 ? 'text-emerald-500' : 'text-red-500'
-                        }`}>
-              {coin.change >= 0 ? '+' : ''}{coin.change}%
-                            {coin.change >= 0 ? (
-                                <TrendingUp className="h-3 w-3" />
-                            ) : (
-                                <TrendingDown className="h-3 w-3" />
-                            )}
-            </span>
-
-                    </div>
-                ))}
+                whileHover={{ animationPlayState: "paused" }}>
+                {TICKER_ASSETS.map((symbol, i) => renderItem(symbol, i))}
+                {TICKER_ASSETS.map((symbol, i) => renderItem(symbol, i + 100))}
             </motion.div>
         </div>
     );

@@ -4,6 +4,7 @@ import io.github.kacperweglarz.cryptomarket.entity.MarketData;
 import io.github.kacperweglarz.cryptomarket.entity.TradingPair;
 import io.github.kacperweglarz.cryptomarket.repository.MarketDataRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -16,17 +17,19 @@ public class MarketDataService {
 
     private final MarketDataRepository marketDataRepository;
     private final TradingPairService tradingPairService;
+    private final SimpMessagingTemplate messagingTemplate;
 
     @Autowired
-    public MarketDataService(MarketDataRepository marketDataRepository,  TradingPairService tradingPairService) {
+    public MarketDataService(MarketDataRepository marketDataRepository,  TradingPairService tradingPairService, SimpMessagingTemplate messagingTemplate) {
         this.marketDataRepository = marketDataRepository;
         this.tradingPairService = tradingPairService;
+        this.messagingTemplate = messagingTemplate;
     }
 
     private final Map<String, MarketData> currentCandles = new ConcurrentHashMap<>();
     private final Map<String, TradingPair> knownTradingPairs = new ConcurrentHashMap<>();
 
-    public MarketData updatePrices(String symbol, BigDecimal price, BigDecimal volume) {
+    public MarketData updatePrices(String symbol, BigDecimal price, BigDecimal volume, BigDecimal change) {
 
         TradingPair thisTradingPair = knownTradingPairs.get(symbol);
 
@@ -52,7 +55,7 @@ public class MarketDataService {
 
         } else if (candleTimeStamp.isAfter(thisCandle.getTimestamp())) {
 
-            marketDataRepository.save(thisCandle);
+            //marketDataRepository.save(thisCandle);
 
             returnCandle = createCandle(thisTradingPair,price,volume,candleTimeStamp);
 
@@ -72,8 +75,14 @@ public class MarketDataService {
             returnCandle = thisCandle;
         }
 
+        PriceUpdateDto update = new PriceUpdateDto(symbol, price, change);
+        messagingTemplate.convertAndSend("/topic/prices", update);
+
+        System.out.println(update);
         return returnCandle;
     }
+
+    public record PriceUpdateDto(String symbol, BigDecimal price, BigDecimal change) {}
 
 
 
