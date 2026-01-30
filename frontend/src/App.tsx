@@ -2,6 +2,7 @@ import { Routes, Route, useLocation } from 'react-router-dom';
 import { Navbar } from './components/Navbar';
 import { Home } from './pages/Home';
 import { Login } from './pages/Login';
+import { SignIn } from './pages/SignIn';
 import { cn } from './utils/utils';
 
 function App() {
@@ -27,6 +28,7 @@ function App() {
                 <Routes>
                     <Route path="/" element={<Home />} />
                     <Route path="/login" element={<Login/>} />
+                    <Route path="/signin" element={<SignIn/>} />
                 </Routes>
             </main>
 

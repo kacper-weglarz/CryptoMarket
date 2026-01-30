@@ -43,7 +43,7 @@ export function Navbar() {
                     Zaloguj się
                 </button>
                 </Link>
-                <Link to="/register">
+                <Link to="/signin">
                 <button className="rounded-full bg-btn-bg px-8 py-3 text-base font-bold text-btn-text transition-all hover:scale-105
                                     hover:bg-emerald-400 hover:text-zinc-950 hover:shadow-lg hover:shadow-emerald-500/20 active:scale-95">
                     Zarejestruj się
