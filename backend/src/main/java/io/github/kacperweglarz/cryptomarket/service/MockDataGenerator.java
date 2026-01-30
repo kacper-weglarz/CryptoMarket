@@ -27,7 +27,7 @@ public class MockDataGenerator {
     public MockDataGenerator(MarketDataService marketDataService) {
         this.marketDataService = marketDataService;
 
-        mockPrices.put("BTC/USDT", new BigDecimal("43000.00"));
+        mockPrices.put("BTC/USDT", new BigDecimal("42000.00"));
         mockPrices.put("ETH/USDT", new BigDecimal("2300.00"));
         mockPrices.put("SOL/USDT", new BigDecimal("95.00"));
         mockPrices.put("BNB/USDT", new BigDecimal("310.00"));
