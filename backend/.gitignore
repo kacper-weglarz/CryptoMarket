@@ -31,3 +31,20 @@ build/
 
 ### VS Code ###
 .vscode/
+
+# === Secrets / env ===
+.env
+.env.*
+application.properties
+application-*.properties
+docker-compose.yml
+
+# === Spring Boot ===
+logs/
+*.log
+hs_err_pid*
+replay_pid*
+
+# === Maven ===
+dependency-reduced-pom.xml
+.mvn/timing.properties
