@@ -1,5 +1,5 @@
 import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
-import { useCryptoPrices } from '../network/CryptoPriceContext';
+import { useCryptoPrices } from '../context/CryptoPriceContext';
 import { motion } from 'framer-motion';
 
 const TICKER_ASSETS = [

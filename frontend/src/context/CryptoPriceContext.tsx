@@ -26,7 +26,7 @@ export const CryptoPriceProvider = ({ children }: { children: ReactNode }) => {
         client.debug = () => {};
 
         client.connect({}, () => {
-            console.log('✅ Global WebSocket Connected');
+            console.log('WebSocket Connected');
             setIsConnected(true);
 
             client.subscribe('/topic/prices', (message) => {
@@ -38,7 +38,7 @@ export const CryptoPriceProvider = ({ children }: { children: ReactNode }) => {
                 }));
             });
         }, (error) => {
-            console.error('❌ Global WebSocket Error:', error);
+            console.error('WebSocket Error:', error);
             setIsConnected(false);
         });
 

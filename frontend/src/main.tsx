@@ -1,16 +1,21 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
-import {CryptoPriceProvider} from './network/CryptoPriceContext'
+import {CryptoPriceProvider} from './context/CryptoPriceContext'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import './index.css'
 import App from './App.tsx'
+
+const queryClient = new QueryClient();
 
 createRoot(document.getElementById('root')!).render(
     <StrictMode>
         <BrowserRouter>
-            <CryptoPriceProvider>
-                <App />
-            </CryptoPriceProvider>
+            <QueryClientProvider client={queryClient}>
+                <CryptoPriceProvider>
+                    <App />
+                </CryptoPriceProvider>
+            </QueryClientProvider>
         </BrowserRouter>
     </StrictMode>,
 )

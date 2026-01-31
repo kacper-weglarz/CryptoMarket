@@ -1,6 +1,6 @@
 import { Bitcoin, TrendingUp, TrendingDown, Info, Wallet } from 'lucide-react';
 import { useState } from 'react';
-import { useCryptoPrices } from '../network/CryptoPriceContext';
+import { useCryptoPrices } from '../context/CryptoPriceContext';
 
 export function TradingWidget() {
     const { prices } = useCryptoPrices();

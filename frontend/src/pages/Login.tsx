@@ -1,9 +1,20 @@
-import { useState } from 'react';
+import { useState, SyntheticEvent } from 'react';
 import { Link } from 'react-router-dom';
-import { Mail, Lock, Eye, EyeOff, ArrowLeft, Gem, Github } from 'lucide-react';
+import { Mail, Lock, Eye, EyeOff, ArrowLeft, Gem, Github, AlertCircle } from 'lucide-react';
+import { useLogin } from '../hooks/useAuth';
 
 export function Login() {
+
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const { mutate: login, isPending, isError, error } = useLogin();
+
     const [showPassword, setShowPassword] = useState(false);
+
+    const handleSubmit = (e: SyntheticEvent) => {
+        e.preventDefault();
+        login({email, password });
+    };
 
     return (
         <div className="flex min-h-screen w-full items-center justify-center p-4">
@@ -28,7 +39,13 @@ export function Login() {
                         Wprowadź swoje dane, aby uzyskać dostęp do konta
                     </p>
                 </div>
-                <form className="space-y-4" onSubmit={(e) => e.preventDefault()}>
+                {isError && (
+                    <div className="mb-4 flex items-center gap-2 rounded-lg border border-red-500/20 bg-red-500/10 p-3 text-sm text-red-500">
+                        <AlertCircle className="h-4 w-4" />
+                        <span>{error?.response?.data?.message || "Wystąpił błąd logowania"}</span>
+                    </div>
+                )}
+                <form className="space-y-4" onSubmit={handleSubmit}>
                     <div className="space-y-1.5">
                         <label className="text-xs font-medium text-[var(--text-muted)] ml-1">Email</label>
                         <div className="relative group">
@@ -39,6 +56,9 @@ export function Login() {
                             <input
                                 type="email"
                                 placeholder="nazwa@przyklad.com"
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
+                                required
                                 className="w-full rounded-xl border border-[var(--nav-border)] bg-[var(--bg-app)] py-3 pl-10 pr-4
                                             text-sm text-[var(--text-app)] outline-none transition-all placeholder:text-zinc-500
                                             focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"/>
@@ -57,6 +77,9 @@ export function Login() {
                             <input
                                 type={showPassword ? "text" : "password"}
                                 placeholder="••••••••"
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                required
                                 className="w-full rounded-xl border border-[var(--nav-border)] bg-[var(--bg-app)] py-3 pl-10 pr-10 text-sm
                                             text-[var(--text-app)] outline-none transition-all placeholder:text-zinc-500 focus:border-emerald-500
                                             focus:ring-1 focus:ring-emerald-500"/>
@@ -68,9 +91,11 @@ export function Login() {
                             </button>
                         </div>
                     </div>
-                    <button className="w-full rounded-xl bg-emerald-500 py-3.5 text-sm font-bold text-white shadow-lg shadow-emerald-500/20
+                    <button
+                        disabled={isPending}
+                        className="w-full rounded-xl bg-emerald-500 py-3.5 text-sm font-bold text-white shadow-lg shadow-emerald-500/20
                                    transition-all hover:bg-emerald-600 hover:shadow-emerald-500/30 hover:-translate-y-0.5 active:translate-y-0">
-                        Zaloguj się
+                        {isPending ? 'Logowanie...' : 'Zaloguj się'}
                     </button>
                 </form>
                 <div className="my-6 flex items-center gap-4">

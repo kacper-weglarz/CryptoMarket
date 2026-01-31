@@ -1,5 +1,5 @@
 import { Gem, Sun, Moon } from 'lucide-react';
-import { useTheme } from '../utils/useTheme';
+import { useTheme } from '../hooks/useTheme';
 import { Link } from 'react-router-dom';
 
 
