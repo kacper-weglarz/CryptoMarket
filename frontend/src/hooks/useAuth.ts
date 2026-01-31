@@ -13,7 +13,7 @@ export const useRegister = () => {
 
         localStorage.setItem('token', response.token);
 
-        navigate('/');
+        navigate('/login');
     },
         onError: (error) => {
             console.error("Wystąpił błąd rejestracji:", error);
@@ -30,7 +30,7 @@ export const useLogin = () => {
         onSuccess: (response) => {
             console.log("Zalogowano użytkownika", response);
             localStorage.setItem('token', response.token);
-            navigate('/');
+            navigate('/dashboard');
         },
         onError: (error) => {
             console.error("Wystąpił błąd logowania:", error);

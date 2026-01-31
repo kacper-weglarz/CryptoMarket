@@ -3,6 +3,8 @@ import { Navbar } from './components/Navbar';
 import { Home } from './pages/Home';
 import { Login } from './pages/Login';
 import { SignIn } from './pages/SignIn';
+import { Dashboard } from './pages/Dashboard';
+{/*import { WalletView } from './pages/Wallet';*/}
 import { cn } from './utils/utils';
 
 function App() {
@@ -29,6 +31,8 @@ function App() {
                     <Route path="/" element={<Home />} />
                     <Route path="/login" element={<Login/>} />
                     <Route path="/signin" element={<SignIn/>} />
+                    <Route path="/dashboard" element={<Dashboard/>} />
+                   {/*<Route path="/wallet" element={<WalletView />} />*/}
                 </Routes>
             </main>
 
