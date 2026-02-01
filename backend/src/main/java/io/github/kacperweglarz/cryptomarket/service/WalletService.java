@@ -25,6 +25,7 @@ public class WalletService {
     private final WalletRepository walletRepository;
     private final AssetService assetService;
     private final WalletItemRepository walletItemRepository;
+    private static final BigDecimal INITIAL_CAPITAL = new BigDecimal("50000.00");
 
     @Autowired
     public WalletService(WalletRepository walletRepository, AssetService assetService, WalletItemRepository walletItemRepository) {
@@ -40,6 +41,7 @@ public class WalletService {
 
         Wallet newWallet = new Wallet();
         newWallet.setUser(user);
+        newWallet.setInitialized(false);
 
         if(newWallet.getWalletItems() == null) {
             newWallet.setWalletItems(new ArrayList<>());
@@ -64,7 +66,28 @@ public class WalletService {
                 ))
                 .toList();
 
-        return new WalletResponse(wallet.getId(), itemsDto);
+        return new WalletResponse(wallet.getId(), wallet.isInitialized(), itemsDto);
+    }
+
+    @Transactional
+    public void initializeWallet(Long userId) {
+        Wallet wallet = walletRepository.findByUserId(userId)
+                .orElseThrow(() -> new WalletNotFoundException("Wallet not found"));
+
+        if (wallet.isInitialized()) {
+            throw new InvalidAmountException("Wallet has already been initialized! Cannot deposit initial funds again.");
+        }
+
+        int updatedRows = walletItemRepository.depositFunds(wallet.getId(), "USDT", INITIAL_CAPITAL);
+
+        if (updatedRows == 0) {
+            Asset usdt = assetService.getOrCreateAsset("USDT", "Tether");
+            createNewWalletItem(wallet, usdt, INITIAL_CAPITAL);
+        }
+
+        wallet.setInitialized(true);
+
+        walletRepository.save(wallet);
     }
 
     @Transactional

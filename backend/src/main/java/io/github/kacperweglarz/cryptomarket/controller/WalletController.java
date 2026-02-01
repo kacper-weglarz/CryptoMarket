@@ -37,7 +37,18 @@ public class WalletController {
         return ResponseEntity.ok(response);
     }
 
-    @PostMapping
+    @PostMapping("/initialize")
+    public ResponseEntity<Void> initializeWallet(Authentication authentication) {
+        String email = authentication.getName();
+        User user = userService.findUserByEmail(email)
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
+
+        walletService.initializeWallet(user.getId());
+
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/deposit")
     public ResponseEntity<WalletResponse> deposit(@RequestBody DepositRequest depositRequest, Authentication authentication) {
 
         String email = authentication.getName();

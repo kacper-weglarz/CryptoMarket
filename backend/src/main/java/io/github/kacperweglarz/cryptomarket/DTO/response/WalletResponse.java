@@ -12,6 +12,7 @@ import java.util.List;
 public class WalletResponse {
 
         private Long id;
+        private boolean isInitialized;
         private List<WalletItemResponse> items;
 
     @Data

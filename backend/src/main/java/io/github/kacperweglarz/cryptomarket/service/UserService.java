@@ -1,9 +1,11 @@
 package io.github.kacperweglarz.cryptomarket.service;
 
 import io.github.kacperweglarz.cryptomarket.DTO.request.RegisterRequest;
+import io.github.kacperweglarz.cryptomarket.DTO.response.UserProfileResponse;
 import io.github.kacperweglarz.cryptomarket.entity.User;
 import io.github.kacperweglarz.cryptomarket.entity.Wallet;
 import io.github.kacperweglarz.cryptomarket.exception.UserAlreadyExistException;
+import io.github.kacperweglarz.cryptomarket.exception.UserNotFoundException;
 import io.github.kacperweglarz.cryptomarket.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -33,6 +35,19 @@ public class UserService {
 
     public Optional<User> findUserByAlias(String alias){
         return userRepository.findUserByAlias(alias);
+    }
+
+    public UserProfileResponse getUserProfile(String email) {
+
+        User user = userRepository.findUserByEmail(email)
+                .orElseThrow(()-> new UserNotFoundException("User not found"));
+
+        return new UserProfileResponse(
+                user.getName(),
+                user.getSurname(),
+                user.getAlias(),
+                user.getEmail()
+        );
     }
 
     @Transactional

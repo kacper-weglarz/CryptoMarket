@@ -75,14 +75,14 @@ public class MarketDataService {
             returnCandle = thisCandle;
         }
 
-        PriceUpdateDto update = new PriceUpdateDto(symbol, price, change);
+        PriceUpdateDto update = new PriceUpdateDto(symbol, price, change, volume);
         messagingTemplate.convertAndSend("/topic/prices", update);
 
         System.out.println(update);
         return returnCandle;
     }
 
-    public record PriceUpdateDto(String symbol, BigDecimal price, BigDecimal change) {}
+    public record PriceUpdateDto(String symbol, BigDecimal price, BigDecimal change, BigDecimal volume) {}
 
 
 
