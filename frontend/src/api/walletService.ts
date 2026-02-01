@@ -10,6 +10,7 @@ export interface WalletItem {
 
 export interface WalletResponse {
     id: number;
+    initialized: boolean;
     items: WalletItem[];
 }
 
@@ -17,13 +18,16 @@ export interface DepositRequest {
     amount: number;
 }
 
-
 export const fetchUserWallet = async (): Promise<WalletResponse> => {
-    const response = await apiClient.get<WalletResponse>('/wallet');
+    const response = await apiClient.get<WalletResponse>('wallet');
     return response.data;
 };
 
 export const depositFunds = async (data: DepositRequest): Promise<WalletResponse> => {
-    const response = await apiClient.post<WalletResponse>('/wallet', data);
+    const response = await apiClient.post<WalletResponse>('/wallet/deposit', data);
     return response.data;
+};
+
+export const initializeWallet = async (): Promise<void> => {
+    await apiClient.post('/wallet/initialize');
 };

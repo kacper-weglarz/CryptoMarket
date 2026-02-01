@@ -6,18 +6,26 @@ import {
     Menu, Search, Sun, Moon, PanelLeftClose, PanelLeftOpen
 } from 'lucide-react';
 import { useTheme } from '../hooks/useTheme';
+import { useUser } from '../hooks/useUser';
+import { useQueryClient } from '@tanstack/react-query';
+
 
 interface DashboardLayoutProps {
     children: ReactNode;
 }
 
 export function DashboardLayout({ children }: DashboardLayoutProps) {
+
     const [isCollapsed, setIsCollapsed] = useState(false);
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const menuRef = useRef<HTMLDivElement>(null);
     const location = useLocation();
     const navigate = useNavigate();
     const { theme, toggleTheme } = useTheme();
+    const { data: user, isLoading } = useUser();
+    const userAlias = user?.alias || 'Użytkownik';
+    const fullName = user ? `${user.name} ${user.surname}` : userAlias;
+    const queryClient = useQueryClient();
 
     useEffect(() => {
         function handleClickOutside(event: MouseEvent) {
@@ -31,6 +39,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
 
     const handleLogout = () => {
         localStorage.removeItem('token');
+        queryClient.removeQueries({ queryKey: ['userProfile'] });
         navigate('/');
     };
 
@@ -128,26 +137,25 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                                     <User className="h-4 w-4 text-zinc-400" />
                                 </div>
                                 <div className="text-left hidden sm:block">
-                                    <p className="text-xs font-bold text-zinc-100">Jan Kowalski</p>
-                                    <p className="text-[10px] text-zinc-400 leading-none">Inwestor</p>
+                                    <p className="text-xs font-bold text-zinc-100">{userAlias}</p>
                                 </div>
                                 <Menu className="ml-2 h-4 w-4 text-zinc-400" />
                             </button>
                             {isMenuOpen && (
                                 <div className="absolute right-0 top-full mt-2 w-64 origin-top-right overflow-hidden rounded-2xl border
-                                                border-nav-border bg-nav-bg p-2 shadow-2xl backdrop-blur-xl animate-in fade-in zoom-in-95
+                                                border-nav-border bg-white dark:bg-zinc-975 p-2 shadow-2xl animate-in fade-in zoom-in-95
                                                 duration-200">
                                     <div className="mb-2 border-b border-nav-border px-4 py-3">
-                                        <p className="text-sm font-bold text-zinc-100">Twój Profil</p>
+                                        <p className="text-sm font-bold text-zinc-100">{isLoading ? 'Ładowanie...' : fullName}</p>
                                         <div className="mt-2 inline-block rounded bg-emerald-500/10 px-2 py-0.5 text-[10px]
                                                         font-bold text-emerald-500 border border-emerald-500/20">
-                                            ZWERYFIKOWANY
+                                            ZWERFIKOWANY
                                         </div>
                                     </div>
                                     <div className="flex flex-col gap-1">
-                                        <button className="flex w-full items-center gap-3 rounded-lg px-4 py-2.5 text-sm text-zinc-400
+                                        <button onClick={() => {navigate("/wallet"); setIsMenuOpen(false);}}  className="flex w-full items-center gap-3 rounded-lg px-4 py-2.5 text-sm text-zinc-400
                                                             transition-colors hover:bg-nav-border hover:text-emerald-500">
-                                            <Wallet className="h-4 w-4" /> Mój Portfel
+                                            <Wallet className="h-4 w-4"/> Mój Portfel
                                         </button>
                                         <button className="flex w-full items-center gap-3 rounded-lg px-4 py-2.5 text-sm text-zinc-400
                                                             transition-colors hover:bg-nav-border hover:text-emerald-500">

@@ -6,6 +6,7 @@ export interface PriceData {
     symbol: string;
     price: number;
     change: number;
+    volume: number;
 }
 
 interface CryptoPriceContextType {
@@ -31,10 +32,11 @@ export const CryptoPriceProvider = ({ children }: { children: ReactNode }) => {
 
             client.subscribe('/topic/prices', (message) => {
                 const update: PriceData = JSON.parse(message.body);
+                const cleanSymbol = update.symbol.replace('/', '').toUpperCase();
 
                 setPrices((prev) => ({
                     ...prev,
-                    [update.symbol]: update
+                    [cleanSymbol]: { ...update, symbol: cleanSymbol },
                 }));
             });
         }, (error) => {

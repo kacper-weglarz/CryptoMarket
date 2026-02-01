@@ -4,7 +4,7 @@ import { Home } from './pages/Home';
 import { Login } from './pages/Login';
 import { SignIn } from './pages/SignIn';
 import { Dashboard } from './pages/Dashboard';
-{/*import { WalletView } from './pages/Wallet';*/}
+import { WalletView } from './pages/Wallet';
 import { cn } from './utils/utils';
 
 function App() {
@@ -18,21 +18,19 @@ function App() {
             <div className={cn(
                 'fixed inset-0 z-0',
                 'bg-[radial-gradient(ellipse_80%_50%_at_50%_-20%,var(--gradient-color),transparent)]'
-            )}
-            />
+            )}/>
 
             {isHomePage && <Navbar />}
 
             <main className={cn(
                 "relative z-10",
-                isHomePage ? "pt-20" : ""
-            )}>
+                isHomePage ? "pt-20" : "")}>
                 <Routes>
                     <Route path="/" element={<Home />} />
                     <Route path="/login" element={<Login/>} />
                     <Route path="/signin" element={<SignIn/>} />
                     <Route path="/dashboard" element={<Dashboard/>} />
-                   {/*<Route path="/wallet" element={<WalletView />} />*/}
+                   <Route path="/wallet" element={<WalletView />} />
                 </Routes>
             </main>
 

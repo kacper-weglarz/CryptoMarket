@@ -1,16 +1,12 @@
-import { useState, useMemo } from 'react';
+import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Eye, EyeOff, TrendingUp, ArrowRightLeft } from 'lucide-react';
-import { useWallet } from '../hooks/useWallet';
+import { useWalletPortfolio } from '../hooks/useWalletPortfolio';
 
 export function BalanceCard() {
+
     const [showBalance, setShowBalance] = useState(true);
-    const { data: wallet, isLoading } = useWallet();
-    const displayBalance = useMemo(() => {
-        if (!wallet || !wallet.items) return 0;
-        const usdtItem = wallet.items.find(item => item.symbol === 'USDT');
-        return usdtItem ? usdtItem.amount : 0;
-    }, [wallet]);
+    const { totalBalance, isLoading } = useWalletPortfolio();
 
     const circleButtonVariants = {
         initial: { scale: 1, borderColor: 'var(--nav-border)' },
@@ -39,7 +35,7 @@ export function BalanceCard() {
             <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
                 <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 text-text-muted mb-1">
-                        <span className="text-sm font-medium">Całkowite Saldo (USDT)</span>
+                        <span className="text-sm font-medium">Szacunkowa Wartość (USD)</span>
                         <button
                             onClick={() => setShowBalance(!showBalance)}
                             className="rounded-full p-1 hover:bg-zinc-500/10 hover:text-text-app transition-colors">
@@ -53,7 +49,7 @@ export function BalanceCard() {
                                 <span className="animate-pulse opacity-50">Wczytywanie...</span>
                             ) : (
                                 showBalance
-                                    ? `$${displayBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                                    ? `$${totalBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
                                     : '••••••••'
                             )}
                         </span>
