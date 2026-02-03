@@ -107,8 +107,8 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
             </aside>
             <div className={`flex min-h-screen flex-col transition-all duration-300 ease-in-out
                             ${isCollapsed ? 'ml-20 w-[calc(100%-5rem)]' : 'ml-64 w-[calc(100%-16rem)]'}`}>
-                <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-nav-border
-                                bg-nav-bg px-8 backdrop-blur-xl transition-colors duration-300">
+                <header className="sticky top-0 z-50 flex h-16 items-center justify-between border-b border-nav-border
+                                    bg-nav-bg px-8 backdrop-blur-xl transition-colors duration-300">
                     <div className="flex items-center gap-4">
                         <div className="relative group">
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-400 group-focus-within:text-emerald-500

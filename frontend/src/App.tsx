@@ -1,4 +1,4 @@
-import { Routes, Route, useLocation } from 'react-router-dom';
+import { Routes, Route, useLocation , Navigate} from 'react-router-dom';
 import { Navbar } from './components/Navbar';
 import { Home } from './pages/Home';
 import { Login } from './pages/Login';
@@ -6,7 +6,9 @@ import { SignIn } from './pages/SignIn';
 import { Dashboard } from './pages/Dashboard';
 import { WalletView } from './pages/Wallet';
 import { Market } from './pages/Market';
+import { SpotMarket } from './pages/SpotMarket';
 import { cn } from './utils/utils';
+
 
 function App() {
     const location = useLocation();
@@ -33,6 +35,9 @@ function App() {
                     <Route path="/dashboard" element={<Dashboard/>} />
                     <Route path="/wallet" element={<WalletView />} />
                     <Route path="/market" element={<Market />} />
+                    <Route path="/spot" element={<SpotMarket />} />
+                    <Route path="/spot" element={<Navigate to="/spot/BTC-USDT" replace />} />
+                    <Route path="/spot/:symbol" element={<SpotMarket />} />
                 </Routes>
             </main>
 

@@ -90,7 +90,7 @@ public class OrderService {
 
         } else {
 
-            BigDecimal currentPrice =  marketDataService.getCurrentPrice(request.getSymbol()); //new BigDecimal("91000");
+            BigDecimal currentPrice = marketDataService.getCurrentPrice(request.getSymbol());
 
             if (currentPrice == null || currentPrice.compareTo(BigDecimal.ZERO) <= 0) {
                 throw new PriceNotFoundException(request.getSymbol());
@@ -98,21 +98,31 @@ public class OrderService {
 
             Asset assetToSpend;
             Asset assetToReceive;
-            BigDecimal amountToSpend = request.getAmount();
+            BigDecimal amountToSpend;
             BigDecimal amountToReceive;
 
             if (request.getOrderSide() == OrderSide.BUY) {
+
                 assetToSpend = tradingPair.getQuoteAsset();
                 assetToReceive = tradingPair.getBaseAsset();
-                amountToReceive = amountToSpend.divide(currentPrice, 8, RoundingMode.HALF_DOWN);
+
+                amountToReceive = request.getAmount();
+
+                amountToSpend = amountToReceive.multiply(currentPrice);
+
             } else {
+
                 assetToSpend = tradingPair.getBaseAsset();
                 assetToReceive = tradingPair.getQuoteAsset();
+
+                amountToSpend = request.getAmount();
+
                 amountToReceive = amountToSpend.multiply(currentPrice).setScale(2, RoundingMode.HALF_DOWN);
             }
 
             walletService.trade(user.getId(), assetToSpend, assetToReceive, amountToSpend, amountToReceive);
 
+            order.setAmount(request.getAmount());
             order.setPrice(currentPrice);
             order.setStatus(OrderStatus.FILLED);
             orderRepository.save(order);
