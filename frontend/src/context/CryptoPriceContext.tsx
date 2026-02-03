@@ -12,9 +12,12 @@ export interface PriceData {
 interface CryptoPriceContextType {
     prices: Record<string, PriceData>;
     isConnected: boolean;
+    favorites: string[];
+    toggleFavorite: (symbol: string) => void;
 }
 
 const CryptoPriceContext = createContext<CryptoPriceContextType | undefined>(undefined);
+
 
 export const CryptoPriceProvider = ({ children }: { children: ReactNode }) => {
     const [prices, setPrices] = useState<Record<string, PriceData>>({});
@@ -49,8 +52,29 @@ export const CryptoPriceProvider = ({ children }: { children: ReactNode }) => {
         };
     }, []);
 
+    const [favorites, setFavorites] = useState<string[]>(() => {
+        try {
+            const saved = localStorage.getItem('cryptoFavorites');
+            return saved ? JSON.parse(saved) : [];
+
+        } catch (e) {
+            console.error("Błąd odczytu localStorage", e);
+            return [];
+        }
+    });
+
+    const toggleFavorite = (symbol: string) => {
+        setFavorites(prev => {
+            const newFavs = prev.includes(symbol)
+                ? prev.filter(s => s !== symbol)
+                : [...prev, symbol];
+            localStorage.setItem('cryptoFavorites', JSON.stringify(newFavs));
+            return newFavs;
+        });
+    };
+
     return (
-        <CryptoPriceContext.Provider value={{ prices, isConnected }}>
+        <CryptoPriceContext.Provider value={{ prices, isConnected, favorites, toggleFavorite }}>
             {children}
         </CryptoPriceContext.Provider>
     );

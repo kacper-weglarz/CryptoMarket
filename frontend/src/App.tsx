@@ -5,6 +5,7 @@ import { Login } from './pages/Login';
 import { SignIn } from './pages/SignIn';
 import { Dashboard } from './pages/Dashboard';
 import { WalletView } from './pages/Wallet';
+import { Market } from './pages/Market';
 import { cn } from './utils/utils';
 
 function App() {
@@ -30,7 +31,8 @@ function App() {
                     <Route path="/login" element={<Login/>} />
                     <Route path="/signin" element={<SignIn/>} />
                     <Route path="/dashboard" element={<Dashboard/>} />
-                   <Route path="/wallet" element={<WalletView />} />
+                    <Route path="/wallet" element={<WalletView />} />
+                    <Route path="/market" element={<Market />} />
                 </Routes>
             </main>
 
