@@ -57,6 +57,7 @@ public class WalletService {
         Wallet wallet = getWalletOrThrow(id);
 
         List<WalletResponse.WalletItemResponse> itemsDto = wallet.getWalletItems().stream()
+                .filter(item -> item.getAmount().compareTo(BigDecimal.ZERO) > 0)
                 .map(item -> new WalletResponse.WalletItemResponse(
                         item.getAsset().getAssetSymbol(),
                         item.getAsset().getAssetName(),
@@ -109,6 +110,7 @@ public class WalletService {
 
     @Transactional
     public void trade(Long id, Asset assetToSpend, Asset assetToReceive, BigDecimal amountToSpend, BigDecimal amountToReceive) {
+
         Wallet wallet = getWalletOrThrow(id);
 
         int subtractResult = walletItemRepository.subtractFunds(wallet.getId(), assetToSpend.getAssetSymbol(), amountToSpend);
@@ -131,6 +133,30 @@ public class WalletService {
 
         if (rowsUpdated == 0) {
             throw new InsufficientFundsException(asset.getAssetSymbol() + " " + amountToLock);
+        }
+    }
+
+    @Transactional
+    public void depositAsset(Long userId, Asset asset, BigDecimal amount) {
+
+        Wallet wallet = getWalletOrThrow(userId);
+
+        int updated = walletItemRepository.depositFunds(wallet.getId(), asset.getAssetSymbol(), amount);
+
+        if (updated == 0) {
+            createNewWalletItem(wallet, asset, amount);
+        }
+    }
+
+    @Transactional
+    public void decreaseLockedBalance(Long userId, Asset asset, BigDecimal amount) {
+
+        Wallet wallet = getWalletOrThrow(userId);
+
+        int rows = walletItemRepository.decreaseLockedBalance(wallet.getId(), asset.getAssetSymbol(), amount);
+
+        if (rows == 0) {
+            throw new InsufficientFundsException("Decrease locked balanced " + asset.getAssetSymbol());
         }
     }
 

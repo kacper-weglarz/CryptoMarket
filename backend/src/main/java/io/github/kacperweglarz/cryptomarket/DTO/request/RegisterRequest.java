@@ -6,15 +6,15 @@ import lombok.Data;
 @Data
 public class RegisterRequest {
 
-    @NotBlank
+    @NotBlank(message = "Name is required")
     private String name;
-    @NotBlank
+    @NotBlank(message = "Surname is required")
     private String surname;
-    @NotBlank
+    @NotBlank(message = "Alias is required")
     private String alias;
-    @NotBlank
+    @NotBlank(message = "Email is required")
     private String email;
-    @NotBlank
+    @NotBlank(message = "Password is required")
     private String password;
 
 }

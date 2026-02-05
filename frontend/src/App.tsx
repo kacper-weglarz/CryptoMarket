@@ -11,6 +11,7 @@ import { cn } from './utils/utils';
 
 
 function App() {
+
     const location = useLocation();
     const isHomePage = location.pathname === '/';
 
@@ -35,7 +36,6 @@ function App() {
                     <Route path="/dashboard" element={<Dashboard/>} />
                     <Route path="/wallet" element={<WalletView />} />
                     <Route path="/market" element={<Market />} />
-                    <Route path="/spot" element={<SpotMarket />} />
                     <Route path="/spot" element={<Navigate to="/spot/BTC-USDT" replace />} />
                     <Route path="/spot/:symbol" element={<SpotMarket />} />
                 </Routes>

@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Menu, X, TrendingUp, TrendingDown } from 'lucide-react';
-import { useCryptoPrices } from '../context/CryptoPriceContext';
+import { useCryptoPrices } from '../../context/CryptoPriceContext';
 
 interface SpotHeaderProps {
     symbol: string;
@@ -14,6 +14,7 @@ export function SpotFuturesHeader({ symbol, price, change }: SpotHeaderProps) {
     const { prices } = useCryptoPrices();
     const navigate = useNavigate();
     const menuRef = useRef<HTMLDivElement>(null);
+
     const safePrice = price || 0;
     const safeChange = change || 0;
     const isPositive = safeChange >= 0;
@@ -45,9 +46,11 @@ export function SpotFuturesHeader({ symbol, price, change }: SpotHeaderProps) {
                         className="p-2 -ml-2 hover:bg-[var(--text-app)]/10 rounded-lg transition-colors text-[var(--text-app)]">
                         {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
                     </button>
+
                     <h1 className="text-2xl font-bold text-[var(--text-app)] tracking-tight">
                         {symbol}
                     </h1>
+
                     <div className="flex items-baseline gap-4 ml-4">
                         <span className={`text-xl font-mono font-bold ${isPositive ? 'text-emerald-500' : 'text-red-500'}`}>
                             ${safePrice.toLocaleString('en-US', { minimumFractionDigits: 2 })}
@@ -76,10 +79,10 @@ export function SpotFuturesHeader({ symbol, price, change }: SpotHeaderProps) {
                                 key={coin.symbol}
                                 onClick={() => handleSelectCoin(coin.symbol)}
                                 className="w-full flex items-center justify-between p-3 hover:bg-[var(--text-app)]/5 rounded-xl
-                                        transition-colors group">
+                                        transition-colors group text-left">
                                 <span className="font-bold text-[var(--text-app)]">{coin.symbol}</span>
                                 <span className={`font-mono text-sm ${coin.change >= 0 ? 'text-emerald-500' : 'text-red-500'}`}>
-                                    ${(coin.price || 0).toLocaleString()}
+                                    ${(coin.price || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}
                                 </span>
                             </button>
                         ))}

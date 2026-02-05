@@ -1,8 +1,8 @@
 import { useParams } from 'react-router-dom';
 import { useCryptoPrices } from '../context/CryptoPriceContext';
 import { DashboardLayout } from '../components/DashboardLayout';
-import { SpotFuturesHeader } from '../components/SpotFuturesHeader';
-import { OrderForm } from '../components/OrderForm';
+import { SpotFuturesHeader } from '../components/spotMarket/SpotFuturesHeader';
+import { OrderFormSpot } from '../components/spotMarket/OrderFormSpot';
 
 export function SpotMarket() {
     const { symbol } = useParams();
@@ -33,21 +33,17 @@ export function SpotMarket() {
                 <SpotFuturesHeader
                     symbol={formatted}
                     price={marketData?.price}
-                    change={marketData?.change}
-                />
+                    change={marketData?.change}/>
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 flex-1 min-h-[600px]">
                     <div className="lg:col-span-9 border border-[var(--nav-border)] rounded-2xl bg-[var(--nav-bg)] min-h-[400px]
                                     flex items-center justify-center relative overflow-hidden">
                     </div>
                     <div className="lg:col-span-3">
-                        <OrderForm
-                            type="spot"
+                        <OrderFormSpot
                             base={base}
                             quote={quote}
-                            currentPrice={currentPrice}
-                        />
+                            currentPrice={currentPrice}/>
                     </div>
-
                 </div>
             </div>
         </DashboardLayout>

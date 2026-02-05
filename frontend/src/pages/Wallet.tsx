@@ -2,9 +2,9 @@ import { motion } from 'framer-motion';
 import { useWalletPortfolio } from '../hooks/useWalletPortfolio';
 import { useInitializeWallet} from '../hooks/useWallet';
 import { DashboardLayout } from '../components/DashboardLayout';
-import { WalletBalanceCard } from '../components/WalletBalanceCard';
-import { WalletStructure } from '../components/WalletStructure';
-import { WalletItems } from '../components/WalletItems';
+import { WalletBalanceCard } from '../components/wallet/WalletBalanceCard';
+import { WalletStructure } from '../components/wallet/WalletStructure';
+import { WalletItems } from '../components/wallet/WalletItems';
 
 export function WalletView() {
     const {

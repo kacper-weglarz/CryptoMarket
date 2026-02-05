@@ -1,5 +1,5 @@
 import { Star, Activity, WifiOff, ChevronRight } from 'lucide-react';
-import { useCryptoPrices } from '../context/CryptoPriceContext';
+import { useCryptoPrices } from '../../context/CryptoPriceContext';
 import { useNavigate } from 'react-router-dom';
 
 export function HotMarketsWidget() {
@@ -55,7 +55,7 @@ export function HotMarketsWidget() {
                         <th className="px-6 py-4 text-right">Cena</th>
                         <th className="px-6 py-4 text-right">24h Zmiana</th>
                         <th className="px-6 py-4 text-right hidden md:table-cell">Wolumen</th>
-                        <th className="px-8 py-4 text-right">Akcja</th>
+                        <th className="px-8 py-4 text-right">Handluj</th>
                     </tr>
                     </thead>
                     <tbody className="divide-y divide-[var(--nav-border)]/30">

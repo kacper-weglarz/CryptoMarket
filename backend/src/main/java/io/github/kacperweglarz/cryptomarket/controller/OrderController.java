@@ -32,7 +32,7 @@ public class OrderController {
         String email = authentication.getName();
 
         User user = userService.findUserByEmail(email)
-                .orElseThrow(() -> new UserNotFoundException(""));
+                .orElseThrow(() -> new UserNotFoundException("User not found with email: " + email));
 
         OrderResponse response = orderService.placeSpotOrder(user.getId(), spotOrderRequest);
 
@@ -44,12 +44,10 @@ public class OrderController {
 
         String email = authentication.getName();
         User user = userService.findUserByEmail(email)
-                .orElseThrow(() -> new UserNotFoundException("User not found"));
+                .orElseThrow(() -> new UserNotFoundException("User not found with email: " + email));
 
         List<OrderResponse> orders = orderService.getUserOrders(user.getId());
 
         return ResponseEntity.ok(orders);
     }
-
-
 }

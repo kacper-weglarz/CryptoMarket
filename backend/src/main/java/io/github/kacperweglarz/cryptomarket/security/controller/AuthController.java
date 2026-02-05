@@ -29,7 +29,6 @@ public class AuthController {
         return ResponseEntity.ok(registerResponse);
     }
 
-
     @PostMapping("/login")
     public ResponseEntity<UserResponse> login (@RequestBody LoginRequest loginRequest) {
 
@@ -37,6 +36,5 @@ public class AuthController {
 
         return ResponseEntity.ok(loginResponse);
     }
-
 
 }

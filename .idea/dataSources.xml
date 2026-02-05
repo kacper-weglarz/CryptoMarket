@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="DataSourceManagerImpl" format="xml" multifile-model="true">
-    <data-source source="LOCAL" name="crypto-market-DB@localhost" uuid="25e79583-3069-47da-8459-edf0c9923bd5">
+    <data-source source="LOCAL" name="crypto-market-DB@localhost" uuid="f46f5bfe-9526-490f-9ee0-e2e8cae4d4d2">
       <driver-ref>postgresql</driver-ref>
       <synchronize>true</synchronize>
       <imported>true</imported>

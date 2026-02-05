@@ -27,9 +27,13 @@ public interface WalletItemRepository extends JpaRepository<WalletItem,Long> {
             "WHERE wi.wallet.id = :walletId AND wi.asset.assetSymbol = :symbol AND wi.availableBalance >= :amount")
     int subtractFunds(@Param("walletId") Long walletId, @Param("symbol") String symbol, @Param("amount") BigDecimal amount);
 
-
     @Modifying
     @Query("UPDATE WalletItem wi SET wi.availableBalance = wi.availableBalance - :amount, wi.lockedBalance = wi.lockedBalance + :amount " +
             "WHERE wi.wallet.id = :walletId AND wi.asset.assetSymbol = :symbol AND wi.availableBalance >= :amount")
     int lockFunds(@Param("walletId") Long walletId, @Param("symbol") String symbol, @Param("amount") BigDecimal amount);
+
+    @Modifying
+    @Query("UPDATE WalletItem wi SET wi.amount = wi.amount - :amount, wi.lockedBalance = wi.lockedBalance - :amount " +
+            "WHERE wi.wallet.id = :walletId AND wi.asset.assetSymbol = :symbol AND wi.lockedBalance >= :amount")
+    int decreaseLockedBalance(@Param("walletId") Long walletId, @Param("symbol") String symbol, @Param("amount") BigDecimal amount);
 }

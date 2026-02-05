@@ -1,9 +1,9 @@
 import { DashboardLayout } from '../components/DashboardLayout';
-import { BalanceCard } from '../components/BalanceCard';
-import { FearGreedWidget } from '../components/FearGreedWidget';
-import { QuickSwapWidget } from '../components/QuickSwapWidget';
-import { PositionsSlider} from '../components/PositionSlider';
-import { HotMarketsWidget } from '../components/HotMarketsWidget';
+import { BalanceCard } from '../components/dashboard/BalanceCard';
+import { FearGreedWidget } from '../components/dashboard/FearGreedWidget';
+import { QuickSwapWidget } from '../components/dashboard/QuickSwapWidget';
+import { PositionsSlider} from '../components/dashboard/PositionSlider';
+import { HotMarketsWidget } from '../components/dashboard/HotMarketsWidget';
 
 export function Dashboard() {
     return (

@@ -220,4 +220,74 @@ class WalletServiceTest {
                 walletService.lockFunds(userId, asset, new BigDecimal("50"))
         );
     }
+
+    @Test
+    void shouldInitializeWallet_Success() {
+        Long userId = 1L;
+        Wallet wallet = new Wallet();
+        wallet.setId(10L);
+        wallet.setInitialized(false);
+
+        when(walletRepository.findByUserId(userId)).thenReturn(Optional.of(wallet));
+        when(walletItemRepository.depositFunds(10L, "USDT", new BigDecimal("50000.00"))).thenReturn(1);
+
+        walletService.initializeWallet(userId);
+
+        assertTrue(wallet.isInitialized());
+        verify(walletRepository).save(wallet);
+    }
+
+    @Test
+    void shouldThrowException_WhenWalletAlreadyInitialized() {
+        Long userId = 1L;
+        Wallet wallet = new Wallet();
+        wallet.setInitialized(true);
+
+        when(walletRepository.findByUserId(userId)).thenReturn(Optional.of(wallet));
+
+        assertThrows(InvalidAmountException.class, () -> walletService.initializeWallet(userId));
+    }
+
+    @Test
+    void shouldDepositAsset_CreateNew_WhenNotExists() {
+        Long userId = 1L;
+        Asset eth = new Asset(); eth.setAssetSymbol("ETH");
+        Wallet wallet = new Wallet(); wallet.setId(10L);
+
+        when(walletRepository.findByUserId(userId)).thenReturn(Optional.of(wallet));
+        when(walletItemRepository.depositFunds(10L, "ETH", new BigDecimal("1.5"))).thenReturn(0);
+        when(walletItemRepository.findByWalletIdAndSymbol(10L, "ETH")).thenReturn(Optional.empty());
+
+        walletService.depositAsset(userId, eth, new BigDecimal("1.5"));
+
+        verify(walletItemRepository).save(any(WalletItem.class));
+    }
+
+    @Test
+    void shouldDecreaseLockedBalance_Success() {
+        Long userId = 1L;
+        Asset btc = new Asset(); btc.setAssetSymbol("BTC");
+        Wallet wallet = new Wallet(); wallet.setId(10L);
+
+        when(walletRepository.findByUserId(userId)).thenReturn(Optional.of(wallet));
+        when(walletItemRepository.decreaseLockedBalance(10L, "BTC", new BigDecimal("0.5"))).thenReturn(1);
+
+        walletService.decreaseLockedBalance(userId, btc, new BigDecimal("0.5"));
+
+        verify(walletItemRepository).decreaseLockedBalance(10L, "BTC", new BigDecimal("0.5"));
+    }
+
+    @Test
+    void shouldThrowException_WhenDecreaseLockedBalance_Fails() {
+        Long userId = 1L;
+        Asset btc = new Asset(); btc.setAssetSymbol("BTC");
+        Wallet wallet = new Wallet(); wallet.setId(10L);
+
+        when(walletRepository.findByUserId(userId)).thenReturn(Optional.of(wallet));
+        when(walletItemRepository.decreaseLockedBalance(10L, "BTC", new BigDecimal("0.5"))).thenReturn(0);
+
+        assertThrows(InsufficientFundsException.class, () ->
+                walletService.decreaseLockedBalance(userId, btc, new BigDecimal("0.5"))
+        );
+    }
 }

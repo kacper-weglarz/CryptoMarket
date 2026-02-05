@@ -1,5 +1,5 @@
 import { ArrowRight, TrendingUp } from 'lucide-react';
-import { TradingWidget } from './TradingWidget'; //
+import { TradingWidget } from '../TradingWidget';
 
 export function Hero() {
     return (

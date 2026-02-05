@@ -48,7 +48,6 @@ export function TradingWidget() {
                         </div>
                     </div>
                 </div>
-
                 <div className="p-8 space-y-8">
                     <div>
                         <div className="flex justify-between mb-4">
@@ -60,7 +59,6 @@ export function TradingWidget() {
                                 {leverage}x
                             </span>
                         </div>
-
                         <div className="relative h-6 w-full flex items-center">
                             <div className="absolute w-full h-2 bg-[var(--bg-app)] rounded-full overflow-hidden border
                                             border-[var(--nav-border)]">
@@ -81,7 +79,6 @@ export function TradingWidget() {
                                 className="absolute h-5 w-5 rounded-full bg-[var(--bg-app)] border-2 border-emerald-500
                                             shadow-[0_0_15px_rgba(16,185,129,0.5)] transition-all duration-75 ease-out pointer-events-none z-10"/>
                         </div>
-
                         <div className="flex justify-between mt-2 text-[10px] font-medium text-[var(--text-muted)] uppercase tracking-wider">
                             <span>1x</span>
                             <span>10x</span>
@@ -99,7 +96,6 @@ export function TradingWidget() {
                                 className="w-full bg-transparent font-mono text-[var(--text-app)] text-base font-bold outline-none
                                             opacity-70 cursor-not-allowed"/>
                         </div>
-
                         <div className="group rounded-xl bg-[var(--bg-app)] border border-[var(--nav-border)] p-4 relative ring-1
                                         ring-emerald-500/20 transition-all focus-within:ring-emerald-500 focus-within:border-emerald-500">
                             <div className="text-[11px] text-[var(--text-muted)] mb-1 font-medium">Margin (USD)</div>

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Eye, EyeOff, TrendingUp, ArrowRightLeft } from 'lucide-react';
-import { useWalletPortfolio } from '../hooks/useWalletPortfolio';
+import { useWalletPortfolio } from '../../hooks/useWalletPortfolio';
 
 export function BalanceCard() {
 

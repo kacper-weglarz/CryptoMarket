@@ -1,5 +1,5 @@
 import { Star, Activity, WifiOff } from 'lucide-react';
-import { useCryptoPrices } from '../context/CryptoPriceContext';
+import { useCryptoPrices } from '../../context/CryptoPriceContext';
 import { useNavigate } from 'react-router-dom';
 
 export function MarketsWidget() {

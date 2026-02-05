@@ -30,7 +30,7 @@ public class WalletController {
         String email = authentication.getName();
 
         User user = userService.findUserByEmail(email)
-                .orElseThrow(() -> new UserNotFoundException(""));
+                .orElseThrow(() -> new UserNotFoundException("User not found with email: " + email));
 
         WalletResponse response = walletService.getUserWallet(user.getId());
 
@@ -41,7 +41,7 @@ public class WalletController {
     public ResponseEntity<Void> initializeWallet(Authentication authentication) {
         String email = authentication.getName();
         User user = userService.findUserByEmail(email)
-                .orElseThrow(() -> new UserNotFoundException("User not found"));
+                .orElseThrow(() -> new UserNotFoundException("User not found with email: " + email));
 
         walletService.initializeWallet(user.getId());
 
@@ -54,7 +54,7 @@ public class WalletController {
         String email = authentication.getName();
 
         User user = userService.findUserByEmail(email)
-                .orElseThrow(() -> new UserNotFoundException(""));
+                .orElseThrow(() -> new UserNotFoundException("User not found with email: " + email));
 
         walletService.deposit(user.getId(), depositRequest.getAmount());
 
