@@ -1,7 +1,7 @@
 package io.github.kacperweglarz.cryptomarket.serviceTest;
 
 import io.github.kacperweglarz.cryptomarket.DTO.request.SpotOrderRequest;
-import io.github.kacperweglarz.cryptomarket.DTO.response.OrderResponse;
+import io.github.kacperweglarz.cryptomarket.DTO.response.SpotOrderResponse;
 import io.github.kacperweglarz.cryptomarket.entity.Asset;
 import io.github.kacperweglarz.cryptomarket.entity.Order;
 import io.github.kacperweglarz.cryptomarket.entity.TradingPair;
@@ -86,7 +86,7 @@ class OrderServiceTest {
             return order;
         });
 
-        OrderResponse response = orderService.placeSpotOrder(1L, request);
+        SpotOrderResponse response = orderService.placeSpotOrder(1L, request);
 
         assertNotNull(response);
         assertEquals(100L, response.getOrderId());
@@ -130,7 +130,7 @@ class OrderServiceTest {
             return order;
         });
 
-        OrderResponse response = orderService.placeSpotOrder(1L, request);
+        SpotOrderResponse response = orderService.placeSpotOrder(1L, request);
 
         assertNotNull(response);
         assertEquals(200L, response.getOrderId());
@@ -175,7 +175,7 @@ class OrderServiceTest {
             return order;
         });
 
-        OrderResponse response = orderService.placeSpotOrder(1L, request);
+        SpotOrderResponse response = orderService.placeSpotOrder(1L, request);
 
         assertNotNull(response);
         assertEquals(300L, response.getOrderId());
@@ -258,17 +258,17 @@ class OrderServiceTest {
         when(orderRepository.findByUserIdOrderByIdDesc(id))
                 .thenReturn(List.of(order1, order2));
 
-        List<OrderResponse> responses = orderService.getUserOrders(id);
+        List<SpotOrderResponse> responses = orderService.getUserOrders(id);
 
         assertNotNull(responses);
         assertEquals(2, responses.size());
 
-        OrderResponse res1 = responses.get(0);
+        SpotOrderResponse res1 = responses.get(0);
         assertEquals(101L, res1.getOrderId());
         assertEquals("BTC/USDT", res1.getSymbol());
         assertEquals(0, new BigDecimal("40000").compareTo(res1.getPrice()));
 
-        OrderResponse res2 = responses.get(1);
+        SpotOrderResponse res2 = responses.get(1);
 
         assertEquals(102L, res2.getOrderId());
         assertEquals(OrderStatus.FILLED, res2.getStatus());

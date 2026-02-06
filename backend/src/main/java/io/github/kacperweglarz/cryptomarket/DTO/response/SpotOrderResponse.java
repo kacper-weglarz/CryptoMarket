@@ -12,7 +12,7 @@ import java.time.LocalDateTime;
 
 @Data @AllArgsConstructor
 @NoArgsConstructor
-public class OrderResponse {
+public class SpotOrderResponse {
 
     private Long orderId;
     private String symbol;

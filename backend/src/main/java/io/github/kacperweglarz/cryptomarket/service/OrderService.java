@@ -1,7 +1,7 @@
 package io.github.kacperweglarz.cryptomarket.service;
 
 import io.github.kacperweglarz.cryptomarket.DTO.request.SpotOrderRequest;
-import io.github.kacperweglarz.cryptomarket.DTO.response.OrderResponse;
+import io.github.kacperweglarz.cryptomarket.DTO.response.SpotOrderResponse;
 import io.github.kacperweglarz.cryptomarket.entity.Asset;
 import io.github.kacperweglarz.cryptomarket.entity.Order;
 import io.github.kacperweglarz.cryptomarket.entity.TradingPair;
@@ -54,7 +54,7 @@ public class OrderService {
     }
 
     @Transactional
-    public OrderResponse placeSpotOrder(Long id, SpotOrderRequest request){
+    public SpotOrderResponse placeSpotOrder(Long id, SpotOrderRequest request){
 
         if (request.getAmount() == null || request.getAmount().compareTo(BigDecimal.ZERO) <= 0) {
             throw new InvalidAmountException("Amount must be greater than zero " + request.getAmount());
@@ -90,7 +90,7 @@ public class OrderService {
             order.setStatus(OrderStatus.PENDING);
             orderRepository.save(order);
 
-            return new OrderResponse(
+            return new SpotOrderResponse(
                     order.getId(),
                     order.getTradingPair().getTradingPairSymbol(),
                     order.getType(),
@@ -128,7 +128,7 @@ public class OrderService {
             order.setStatus(OrderStatus.FILLED);
             orderRepository.save(order);
 
-            return new OrderResponse(
+            return new SpotOrderResponse(
                     order.getId(),
                     order.getTradingPair().getTradingPairSymbol(),
                     order.getType(),
@@ -207,9 +207,9 @@ public class OrderService {
         log.info("Zlecenie ID: {} wykonane. Cena: {}", order.getId(), currentPrice);
     }
 
-    public List<OrderResponse> getUserOrders(Long userId) {
+    public List<SpotOrderResponse> getUserOrders(Long userId) {
         return orderRepository.findByUserIdOrderByIdDesc(userId).stream()
-                .map(order -> new OrderResponse(
+                .map(order -> new SpotOrderResponse(
                         order.getId(),
                         order.getTradingPair().getTradingPairSymbol(),
                         order.getType(),

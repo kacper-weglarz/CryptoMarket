@@ -1,7 +1,7 @@
 package io.github.kacperweglarz.cryptomarket.controller;
 
 import io.github.kacperweglarz.cryptomarket.DTO.request.SpotOrderRequest;
-import io.github.kacperweglarz.cryptomarket.DTO.response.OrderResponse;
+import io.github.kacperweglarz.cryptomarket.DTO.response.SpotOrderResponse;
 import io.github.kacperweglarz.cryptomarket.entity.User;
 import io.github.kacperweglarz.cryptomarket.exception.UserNotFoundException;
 import io.github.kacperweglarz.cryptomarket.service.OrderService;
@@ -27,26 +27,26 @@ public class OrderController {
     }
 
     @PostMapping("/spot")
-    public ResponseEntity<OrderResponse> placeSpotOrder(@RequestBody SpotOrderRequest spotOrderRequest, Authentication authentication) {
+    public ResponseEntity<SpotOrderResponse> placeSpotOrder(@RequestBody SpotOrderRequest spotOrderRequest, Authentication authentication) {
 
         String email = authentication.getName();
 
         User user = userService.findUserByEmail(email)
                 .orElseThrow(() -> new UserNotFoundException("User not found with email: " + email));
 
-        OrderResponse response = orderService.placeSpotOrder(user.getId(), spotOrderRequest);
+        SpotOrderResponse response = orderService.placeSpotOrder(user.getId(), spotOrderRequest);
 
         return ResponseEntity.ok(response);
     }
 
     @GetMapping
-    public ResponseEntity<List<OrderResponse>> getUserOrders(Authentication authentication) {
+    public ResponseEntity<List<SpotOrderResponse>> getUserOrders(Authentication authentication) {
 
         String email = authentication.getName();
         User user = userService.findUserByEmail(email)
                 .orElseThrow(() -> new UserNotFoundException("User not found with email: " + email));
 
-        List<OrderResponse> orders = orderService.getUserOrders(user.getId());
+        List<SpotOrderResponse> orders = orderService.getUserOrders(user.getId());
 
         return ResponseEntity.ok(orders);
     }

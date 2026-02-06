@@ -9,7 +9,7 @@ interface SpotHeaderProps {
     change: number | undefined;
 }
 
-export function SpotFuturesHeader({ symbol, price, change }: SpotHeaderProps) {
+export function FuturesHeader({ symbol, price, change }: SpotHeaderProps) {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const { prices } = useCryptoPrices();
     const navigate = useNavigate();
@@ -32,7 +32,7 @@ export function SpotFuturesHeader({ symbol, price, change }: SpotHeaderProps) {
 
     const handleSelectCoin = (newSymbol: string) => {
         const urlSymbol = newSymbol.replace('/', '-');
-        navigate(`/spot/${urlSymbol}`);
+        navigate(`/futures/${urlSymbol}`);
         setIsMenuOpen(false);
     };
 

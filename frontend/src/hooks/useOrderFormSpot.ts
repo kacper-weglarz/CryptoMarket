@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useWallet } from './useWallet';
-import { useSpotOrder } from './useOrders'; // Zakładam że tu jest export const useSpotOrder
+import { useSpotOrder } from './useOrders';
 import { SpotOrderRequest } from '../api/orderService';
 import Decimal from 'decimal.js';
 
