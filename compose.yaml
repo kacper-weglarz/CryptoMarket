@@ -1,15 +1,39 @@
+version: '3.8'
+
 services:
-
-  postgres:
-    image: 'postgres:latest'
+  postgres_db:
+    image: postgres:15-alpine
+    container_name: crypto-market-db
+    restart: always
     environment:
-      - 'POSTGRES_DB=mydatabase'
-      - 'POSTGRES_PASSWORD=secret'
-      - 'POSTGRES_USER=myuser'
+      POSTGRES_DB: crypto-market-DB
+      POSTGRES_USER: ${DB_USER:-alpin3k}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-alpin3k}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-alpin3k} -d crypto-market-DB"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build: ./backend
+    container_name: crypto-market-backend
+    depends_on:
+      postgres_db:
+        condition: service_healthy
     ports:
-      - '5432'
-      -
+      - "8080:8080"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres_db:5432/crypto-market-DB
+      SPRING_DATASOURCE_USERNAME: ${DB_USER:-alpin3k}
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD:-alpin3k}
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRATION: ${JWT_EXPIRATION:-3600000}
 
-
-
-
+  frontend:
+    build: ./frontend
+    container_name: crypto-market-frontend
+    ports:
+      - "5173:80"
+    depends_on:
+      - backend

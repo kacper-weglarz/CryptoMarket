@@ -1,0 +1,20 @@
+spring.application.name=CryptoMarket
+spring.profiles.active=dev
+
+# PostgreSQL
+spring.datasource.url=jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5433}/crypto-market-DB
+spring.datasource.username=${DB_USER:alpin3k}
+spring.datasource.password=${DB_PASSWORD:alpin3k}
+spring.datasource.driver-class-name=org.postgresql.Driver
+
+# Hibernate
+spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.PostgreSQLDialect
+spring.jpa.show-sql=true
+spring.jpa.hibernate.ddl-auto=update
+
+# JWT Config
+jwt.secret=${JWT_SECRET:very_long_secret_key}
+jwt.expiration=${JWT_EXPIRATION:3600000}
+
+# Logging
+logging.level.io.github.kacperweglarz.cryptomarket=INFO

@@ -22,6 +22,7 @@ import java.io.IOException;
 @Slf4j
 public class AuthTokenFilter extends OncePerRequestFilter {
 
+
     private final JwtService jwtService;
     private final CustomUserDetailsService customUserDetailsService;
     public static final String BEARER_ = "Bearer ";

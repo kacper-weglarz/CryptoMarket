@@ -16,7 +16,7 @@ interface CryptoPriceContextType {
     toggleFavorite: (symbol: string) => void;
 }
 
-const SOCKET_URL = 'http://localhost:8080/ws-public';
+const SOCKET_URL = import.meta.env.VITE_WS_URL || 'http://localhost:8080/ws-public';
 const CryptoPriceContext = createContext<CryptoPriceContextType | undefined>(undefined);
 
 export const CryptoPriceProvider = ({ children }: { children: ReactNode }) => {
