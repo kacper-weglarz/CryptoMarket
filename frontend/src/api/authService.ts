@@ -14,7 +14,7 @@ export interface LoginRequest {
 }
 
 export interface UserResponse {
-    userId: bigint;
+    userId: number;
     alias: string;
     email: string;
     token: string;

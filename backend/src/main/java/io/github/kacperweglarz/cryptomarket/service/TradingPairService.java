@@ -28,7 +28,7 @@ public class TradingPairService {
             throw new IllegalArgumentException("TradingPair asset symbols are equal");
         }
 
-        if (tradingPairRepository.existsTradingPair_ByTradingPairSymbol(tradingPairSymbol)) {
+        if (tradingPairRepository.existsTradingPairByTradingPairSymbol(tradingPairSymbol)) {
             throw new IllegalArgumentException("TradingPair already exists");
         }
 

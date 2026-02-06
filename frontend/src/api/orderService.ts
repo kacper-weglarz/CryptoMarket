@@ -20,6 +20,15 @@ export interface OrderResponse {
 }
 
 export const placeSpotOrder = async (data: SpotOrderRequest): Promise<OrderResponse> => {
-    const response = await apiClient.post<OrderResponse>('/order/spot', data);
+    const response = await apiClient.post<OrderResponse>('/orders/spot', data);
     return response.data;
 };
+
+export const fetchMyOrders = async (): Promise<OrderResponse[]> => {
+    const response = await apiClient.get<OrderResponse[]>('/orders');
+    return response.data;
+};
+
+export const cancelOrder = async (orderId: number): Promise<void> => {
+    await apiClient.post(`/orders/spot/cancel/${orderId}`);
+}

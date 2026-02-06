@@ -11,8 +11,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.ArrayList;
 import java.util.Optional;
 
 @Service
@@ -43,6 +41,7 @@ public class UserService {
                 .orElseThrow(()-> new UserNotFoundException("User not found"));
 
         return new UserProfileResponse(
+                user.getId(),
                 user.getName(),
                 user.getSurname(),
                 user.getAlias(),
@@ -54,11 +53,11 @@ public class UserService {
     public User createUserWithWallet(RegisterRequest request) {
 
         if (findUserByEmail(request.getEmail()).isPresent()) {
-            throw new UserAlreadyExistException("User with this email already exist");
+            throw new UserAlreadyExistException("User with this email: " + request.getEmail() + " already exist");
         }
 
         if (findUserByAlias(request.getAlias()).isPresent()) {
-            throw new UserAlreadyExistException("User with this alias already exist");
+            throw new UserAlreadyExistException("User with this alias: " + request.getAlias() + " already exist");
         }
 
         String encodedPassword = passwordEncoder.encode(request.getPassword());
@@ -69,14 +68,12 @@ public class UserService {
         newUser.setEmail(request.getEmail());
         newUser.setAlias(request.getAlias());
         newUser.setPasswordHash(encodedPassword);
-        newUser.setOrders(new ArrayList<>());
 
-        Wallet newWallet = walletService.createWallet(newUser);
+        User savedUser = userRepository.save(newUser);
 
-        newUser.setWallet(newWallet);
+        Wallet wallet = walletService.createWallet(savedUser);
+        savedUser.setWallet(wallet);
 
-        userRepository.save(newUser);
-
-        return newUser;
+        return savedUser;
     }
 }

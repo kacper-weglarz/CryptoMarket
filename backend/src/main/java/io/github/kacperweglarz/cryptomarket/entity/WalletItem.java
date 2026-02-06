@@ -5,8 +5,11 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
 @NoArgsConstructor @Getter
 @Setter @AllArgsConstructor
@@ -16,7 +19,6 @@ public class WalletItem {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id")
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -27,12 +29,22 @@ public class WalletItem {
     @JoinColumn(name = "asset_id")
     private Asset asset;
 
-    @Column
-    private BigDecimal amount;
+    @Column(precision = 19, scale = 8, nullable = false)
+    private BigDecimal availableBalance = BigDecimal.ZERO;
 
-    @Column
-    private BigDecimal availableBalance;
+    @Column(precision = 19, scale = 8, nullable = false)
+    private BigDecimal lockedBalance = BigDecimal.ZERO;
 
-    @Column
-    private BigDecimal lockedBalance;
+    @Column(updatable = false) @CreationTimestamp
+    private LocalDateTime createdAt;
+
+    @Column @UpdateTimestamp
+    private LocalDateTime updatedAt;
+
+    @Version
+    private Long version;
+
+    public BigDecimal getTotalBalance() {
+        return availableBalance.add(lockedBalance);
+    }
 }

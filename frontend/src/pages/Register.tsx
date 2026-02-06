@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { ArrowLeft, Gem, User, Lock, EyeOff, Eye, Mail, AlertCircle } from 'lucide-react';
 import { useRegister } from '../hooks/useAuth';
 
-export function SignIn() {
+export function Register() {
 
     const [name, setName] = useState('');
     const [surname, setSurname] = useState('');

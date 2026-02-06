@@ -18,6 +18,7 @@ public class FuturesOrderRequest {
     @DecimalMin(value = "0.00000001", message = "Amount must be positive")
     private BigDecimal amount;
 
+    @DecimalMin(value = "0.00000001", message = "Price must be positive")
     private BigDecimal price;
 
     @NotNull(message = "Order type is required")
@@ -28,9 +29,12 @@ public class FuturesOrderRequest {
 
     @NotNull(message = "Leverage is required")
     @Min(value = 1, message = "Leverage must be at least 1x")
-    @Max(value = 100, message = "Leverage cannot exceed 125x")
+    @Max(value = 100, message = "Leverage cannot exceed 100x")
     private Integer leverage;
 
+    @DecimalMin(value = "0.00000001", message = "Take profit must be positive")
     private BigDecimal takeProfit;
+
+    @DecimalMin(value = "0.00000001", message = "Stop loss must be positive")
     private BigDecimal stopLoss;
 }

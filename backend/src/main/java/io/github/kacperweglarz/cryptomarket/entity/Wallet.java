@@ -1,7 +1,5 @@
 package io.github.kacperweglarz.cryptomarket.entity;
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -19,22 +17,22 @@ public class Wallet {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id")
     private Long id;
 
     @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", unique = true)
-    @JsonBackReference
+    @JoinColumn(name = "user_id", unique = true, nullable = false)
     private User user;
 
     @OneToMany(mappedBy = "wallet", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private List<WalletItem> walletItems = new ArrayList<>();
 
-    @JsonProperty("isInitialized")
-    @Column(name = "initialized")
+    @Column(name = "isInitialized")
     private boolean isInitialized = false;
 
-    @Column @CreationTimestamp
+    @Version
+    private Long version;
+
+    @Column(updatable = false) @CreationTimestamp
     private LocalDateTime createdAt;
 
     @Column @UpdateTimestamp

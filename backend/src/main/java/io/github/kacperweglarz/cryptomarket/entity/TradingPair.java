@@ -16,23 +16,19 @@ public class TradingPair {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id")
     private Long id;
 
-    @OneToMany(mappedBy = "tradingPair")
-    private List<Order> orders;
-
-    @OneToMany(mappedBy = "tradingPair", fetch = FetchType.LAZY)
-    private List<MarketData> marketData;
-
-    @Column(name = "symbol")
+    @Column(name = "symbol", unique = true, nullable = false, length = 20)
     private String tradingPairSymbol;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "base_asset_id")
+    @JoinColumn(name = "base_asset_id", nullable = false)
     private Asset baseAsset;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "quote_asset_id")
+    @JoinColumn(name = "quote_asset_id", nullable = false)
     private Asset quoteAsset;
+
+    @Version
+    private Long version;
 }

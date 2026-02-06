@@ -22,7 +22,6 @@ public class Order {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id")
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -33,11 +32,20 @@ public class Order {
     @JoinColumn(name = "trading_pair_id",  nullable = false)
     private TradingPair tradingPair;
 
-    @Column
+    @Column(precision = 19, scale = 8, nullable = false)
     private BigDecimal amount;
 
-    @Column
+    @Column(precision = 19, scale = 8)
     private BigDecimal price;
+
+    @Column(precision = 19, scale = 8, nullable = false)
+    private BigDecimal lockedAmount;
+
+    @Column(nullable = false)
+    private int leverage = 1;
+
+    @Version
+    private Long version;
 
     @Column
     @Enumerated(EnumType.STRING)
@@ -51,7 +59,7 @@ public class Order {
     @Enumerated(EnumType.STRING)
     private OrderStatus status;
 
-    @Column @CreationTimestamp
+    @Column(updatable = false) @CreationTimestamp
     private LocalDateTime createdAt;
 
     @Column @UpdateTimestamp

@@ -1,7 +1,9 @@
 package io.github.kacperweglarz.cryptomarket.repository;
 
 import io.github.kacperweglarz.cryptomarket.entity.WalletItem;
+import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -13,17 +15,20 @@ import java.util.Optional;
 @Repository
 public interface WalletItemRepository extends JpaRepository<WalletItem,Long> {
 
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT wi FROM WalletItem wi WHERE wi.wallet.id = :walletId AND wi.asset.assetSymbol = :symbol")
+    Optional<WalletItem> findByWalletIdAndSymbolWithLock(@Param("walletId") Long walletId, @Param("symbol") String symbol);
 
     @Query("SELECT wi FROM WalletItem wi WHERE wi.wallet.id = :walletId AND wi.asset.assetSymbol = :symbol")
     Optional<WalletItem> findByWalletIdAndSymbol(@Param("walletId") Long walletId, @Param("symbol") String symbol);
 
     @Modifying
-    @Query("UPDATE WalletItem wi SET wi.amount = wi.amount + :amount, wi.availableBalance = wi.availableBalance + :amount " +
+    @Query("UPDATE WalletItem wi SET wi.availableBalance = wi.availableBalance + :amount " +
             "WHERE wi.wallet.id = :walletId AND wi.asset.assetSymbol = :symbol")
     int depositFunds(@Param("walletId") Long walletId, @Param("symbol") String symbol, @Param("amount") BigDecimal amount);
 
     @Modifying
-    @Query("UPDATE WalletItem wi SET wi.amount = wi.amount - :amount, wi.availableBalance = wi.availableBalance - :amount " +
+    @Query("UPDATE WalletItem wi SET wi.availableBalance = wi.availableBalance - :amount " +
             "WHERE wi.wallet.id = :walletId AND wi.asset.assetSymbol = :symbol AND wi.availableBalance >= :amount")
     int subtractFunds(@Param("walletId") Long walletId, @Param("symbol") String symbol, @Param("amount") BigDecimal amount);
 
@@ -33,7 +38,12 @@ public interface WalletItemRepository extends JpaRepository<WalletItem,Long> {
     int lockFunds(@Param("walletId") Long walletId, @Param("symbol") String symbol, @Param("amount") BigDecimal amount);
 
     @Modifying
-    @Query("UPDATE WalletItem wi SET wi.amount = wi.amount - :amount, wi.lockedBalance = wi.lockedBalance - :amount " +
+    @Query("UPDATE WalletItem wi SET wi.lockedBalance = wi.lockedBalance - :amount " +
             "WHERE wi.wallet.id = :walletId AND wi.asset.assetSymbol = :symbol AND wi.lockedBalance >= :amount")
     int decreaseLockedBalance(@Param("walletId") Long walletId, @Param("symbol") String symbol, @Param("amount") BigDecimal amount);
+
+    @Modifying
+    @Query("UPDATE WalletItem wi SET wi.lockedBalance = wi.lockedBalance - :amount, wi.availableBalance = wi.availableBalance + :amount " +
+            "WHERE wi.wallet.id = :walletId AND wi.asset.assetSymbol = :symbol AND wi.lockedBalance >= :amount")
+    int unlockFunds(@Param("walletId") Long walletId, @Param("symbol") String symbol, @Param("amount") BigDecimal amount);
 }

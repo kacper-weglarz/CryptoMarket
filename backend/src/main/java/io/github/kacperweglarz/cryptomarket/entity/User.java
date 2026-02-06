@@ -21,7 +21,6 @@ public class User implements UserDetails {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id")
     private Long id;
 
     @Column(length = 55)
@@ -39,19 +38,18 @@ public class User implements UserDetails {
     @Column(length = 75)
     private String passwordHash;
 
-    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JsonManagedReference
     private Wallet wallet;
 
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
-    private List<Order> orders;
+    @Version
+    private Long version;
 
     @Column @CreationTimestamp
     private LocalDateTime createdAt;
 
     @Column @UpdateTimestamp
     private LocalDateTime updatedAt;
-
 
     //implements UserDetails
     @Override

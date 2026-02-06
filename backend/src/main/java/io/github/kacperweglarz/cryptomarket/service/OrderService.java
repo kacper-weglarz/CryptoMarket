@@ -10,10 +10,12 @@ import io.github.kacperweglarz.cryptomarket.entity.enums.OrderSide;
 import io.github.kacperweglarz.cryptomarket.entity.enums.OrderStatus;
 import io.github.kacperweglarz.cryptomarket.entity.enums.OrderType;
 import io.github.kacperweglarz.cryptomarket.exception.InvalidAmountException;
+import io.github.kacperweglarz.cryptomarket.exception.OrderNotFoundException;
 import io.github.kacperweglarz.cryptomarket.exception.PriceNotFoundException;
 import io.github.kacperweglarz.cryptomarket.exception.UserNotFoundException;
 import io.github.kacperweglarz.cryptomarket.repository.OrderRepository;
 import io.github.kacperweglarz.cryptomarket.repository.UserRepository;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
@@ -34,6 +36,7 @@ public class OrderService {
     private final UserRepository userRepository;
     private final TradingPairService tradingPairService;
     private final MarketDataService marketDataService;
+
     private static final int CRYPTO_SCALE = 8;
     private static final int USDT_SCALE = 2;
 
@@ -47,17 +50,14 @@ public class OrderService {
         this.marketDataService = marketDataService;
     }
 
-    private OrderService self;
     @Autowired
-    public void setSelf(@Lazy OrderService self) {
-        this.self = self;
-    }
+    private @Lazy OrderService self;
 
     @Transactional
     public SpotOrderResponse placeSpotOrder(Long id, SpotOrderRequest request){
 
         if (request.getAmount() == null || request.getAmount().compareTo(BigDecimal.ZERO) <= 0) {
-            throw new InvalidAmountException("Amount must be greater than zero " + request.getAmount());
+            throw new InvalidAmountException("Amount must be greater than or equal to zero: " + request.getAmount());
         }
 
         User user = userRepository.findById(id).orElseThrow(() -> new UserNotFoundException(""));
@@ -69,142 +69,179 @@ public class OrderService {
         order.setAmount(request.getAmount().setScale(CRYPTO_SCALE, RoundingMode.HALF_UP));
         order.setSide(request.getOrderSide());
         order.setType(request.getOrderType());
+        order.setLeverage(1);
+        order.setLockedAmount(BigDecimal.ZERO);
 
         if (request.getOrderType() == OrderType.LIMIT) {
-            if (request.getPrice() == null) throw new InvalidAmountException("Price cannot be null for LIMIT order");
-
-            Asset assetToLock;
-            BigDecimal amountToLock;
-
-            if (request.getOrderSide() == OrderSide.BUY) {
-                assetToLock = tradingPair.getQuoteAsset();
-                amountToLock = request.getAmount().multiply(request.getPrice()).setScale(USDT_SCALE, RoundingMode.HALF_UP);
-            } else {
-                assetToLock = tradingPair.getBaseAsset();
-                amountToLock = request.getAmount().setScale(CRYPTO_SCALE, RoundingMode.HALF_UP);
-            }
-
-            walletService.lockFunds(user.getId(), assetToLock, amountToLock);
-
-            order.setPrice(request.getPrice().setScale(USDT_SCALE, RoundingMode.HALF_UP));
-            order.setStatus(OrderStatus.PENDING);
-            orderRepository.save(order);
-
-            return new SpotOrderResponse(
-                    order.getId(),
-                    order.getTradingPair().getTradingPairSymbol(),
-                    order.getType(),
-                    order.getSide(),
-                    order.getAmount(),
-                    order.getPrice(),
-                    order.getStatus(),
-                    order.getCreatedAt());
-
+            return processLimitOrder(order, request.getPrice(), tradingPair);
         } else {
-            BigDecimal currentPrice = marketDataService.getCurrentPrice(request.getSymbol());
-            if (currentPrice == null || currentPrice.compareTo(BigDecimal.ZERO) <= 0) throw new PriceNotFoundException(request.getSymbol());
-
-            Asset assetToSpend;
-            Asset assetToReceive;
-            BigDecimal amountToSpend;
-            BigDecimal amountToReceive;
-
-            if (request.getOrderSide() == OrderSide.BUY) {
-                assetToSpend = tradingPair.getQuoteAsset();
-                assetToReceive = tradingPair.getBaseAsset();
-                amountToReceive = request.getAmount().setScale(CRYPTO_SCALE, RoundingMode.HALF_UP);
-                amountToSpend = amountToReceive.multiply(currentPrice).setScale(USDT_SCALE, RoundingMode.HALF_UP);
-            } else {
-                assetToSpend = tradingPair.getBaseAsset();
-                assetToReceive = tradingPair.getQuoteAsset();
-                amountToSpend = request.getAmount().setScale(CRYPTO_SCALE, RoundingMode.HALF_UP);
-                amountToReceive = amountToSpend.multiply(currentPrice).setScale(USDT_SCALE, RoundingMode.HALF_UP);
-            }
-
-            walletService.trade(user.getId(), assetToSpend, assetToReceive, amountToSpend, amountToReceive);
-
-            order.setAmount(request.getAmount().setScale(CRYPTO_SCALE, RoundingMode.HALF_UP));
-            order.setPrice(currentPrice.setScale(USDT_SCALE, RoundingMode.HALF_UP));
-            order.setStatus(OrderStatus.FILLED);
-            orderRepository.save(order);
-
-            return new SpotOrderResponse(
-                    order.getId(),
-                    order.getTradingPair().getTradingPairSymbol(),
-                    order.getType(),
-                    order.getSide(),
-                    order.getAmount(),
-                    order.getPrice(),
-                    order.getStatus(),
-                    order.getCreatedAt());
+            return processMarketOrder(order, tradingPair);
         }
     }
+
+    private SpotOrderResponse processLimitOrder(Order order, BigDecimal price, TradingPair pair) {
+
+        if (price == null || price.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new InvalidAmountException("LIMIT order price is required and must be greater than zero: " + price);
+        }
+
+        String assetToLockSymbol;
+        BigDecimal amountToLock;
+
+        if (order.getSide() == OrderSide.BUY) {
+            assetToLockSymbol = pair.getQuoteAsset().getAssetSymbol();
+            amountToLock = order.getAmount().multiply(price).setScale(USDT_SCALE, RoundingMode.HALF_UP);
+        } else {
+            assetToLockSymbol = pair.getBaseAsset().getAssetSymbol();
+            amountToLock = order.getAmount();
+        }
+
+        walletService.lockFunds(order.getUser().getId(), assetToLockSymbol, amountToLock);
+
+        order.setPrice(price);
+        order.setLockedAmount(amountToLock);
+        order.setStatus(OrderStatus.PENDING);
+
+        Order savedOrder = orderRepository.save(order);
+
+        return mapToResponse(savedOrder);
+    }
+
+    private SpotOrderResponse processMarketOrder(Order order, TradingPair pair) {
+
+        BigDecimal currentPrice = marketDataService.getCurrentPrice(pair.getTradingPairSymbol());
+
+        if (currentPrice == null) {
+            throw new PriceNotFoundException(pair.getTradingPairSymbol());
+        }
+
+        String spendSymbol;
+        String receiveSymbol;
+        BigDecimal spendAmount;
+        BigDecimal receiveAmount;
+
+        if (order.getSide() == OrderSide.BUY) {
+            spendSymbol = pair.getQuoteAsset().getAssetSymbol();
+            receiveSymbol = pair.getBaseAsset().getAssetSymbol();
+
+            receiveAmount = order.getAmount();
+            spendAmount = receiveAmount.multiply(currentPrice).setScale(USDT_SCALE, RoundingMode.HALF_UP);
+        } else {
+            spendSymbol = pair.getBaseAsset().getAssetSymbol();
+            receiveSymbol = pair.getQuoteAsset().getAssetSymbol();
+
+            spendAmount = order.getAmount();
+            receiveAmount = spendAmount.multiply(currentPrice).setScale(USDT_SCALE, RoundingMode.HALF_UP);
+        }
+
+        walletService.lockFunds(order.getUser().getId(), spendSymbol, spendAmount);
+        walletService.withdrawLockedFunds(order.getUser().getId(), spendSymbol, spendAmount);
+        walletService.deposit(order.getUser().getId(), receiveSymbol, receiveAmount);
+
+        order.setPrice(currentPrice);
+        order.setLockedAmount(BigDecimal.ZERO);
+        order.setStatus(OrderStatus.FILLED);
+
+        Order saved = orderRepository.save(order);
+        return mapToResponse(saved);
+    }
+
 
     @Scheduled(fixedDelay = 1000)
     public void processSpotLimitOrder() {
         List<Order> orders = orderRepository.findAllByStatusWithRelations(OrderStatus.PENDING);
 
-        orders.forEach(order -> {
+        for (Order order : orders) {
             try {
-                if (order.getType() != OrderType.LIMIT) return;
+                if (order.getLeverage() > 1) {
+                    continue;
+                }
 
                 BigDecimal currentPrice = marketDataService.getCurrentPrice(order.getTradingPair().getTradingPairSymbol());
 
-                if (currentPrice == null) return;
-
-                boolean shouldExecute = false;
-
-                if (order.getSide() == OrderSide.BUY) {
-                    if (currentPrice.compareTo(order.getPrice()) <= 0) {
-                        shouldExecute = true;
-                    }
-                } else if (order.getSide() == OrderSide.SELL) {
-                    if (currentPrice.compareTo(order.getPrice()) >= 0) {
-                        shouldExecute = true;
-                    }
+                if (currentPrice == null) {
+                    continue;
                 }
 
-                if (shouldExecute) {
-                    self.executeLimitOrder(order, currentPrice);
-                }
+                boolean executable = (order.getSide() == OrderSide.BUY && currentPrice.compareTo(order.getPrice()) <= 0) ||
+                        (order.getSide() == OrderSide.SELL && currentPrice.compareTo(order.getPrice()) >= 0);
 
+                if (executable) {
+                    self.executeLimitOrderSafe(order.getId(), currentPrice);
+                }
             } catch (Exception e) {
-                log.error("Błąd procesowania zlecenia ID: " + order.getId(), e);
+                log.error("Error processing order {}", order.getId(), e);
             }
-        });
+        }
     }
 
-    @Transactional(rollbackFor = Exception.class)
-    public void executeLimitOrder(Order order, BigDecimal currentPrice) {
-        Long userId = order.getUser().getId();
-        BigDecimal amount = order.getAmount().setScale(CRYPTO_SCALE, RoundingMode.HALF_UP);
-        BigDecimal limitPrice = order.getPrice().setScale(USDT_SCALE, RoundingMode.HALF_UP);
+    @Transactional(propagation = org.springframework.transaction.annotation.Propagation.REQUIRES_NEW)
+    public void executeLimitOrderSafe(Long orderId, BigDecimal currentPrice) {
 
-        if (order.getSide() == OrderSide.BUY) {
-            Asset assetLocked = order.getTradingPair().getQuoteAsset();
-            BigDecimal amountLocked = amount.multiply(limitPrice).setScale(USDT_SCALE, RoundingMode.HALF_UP);
-            BigDecimal actualCost = amount.multiply(currentPrice).setScale(USDT_SCALE, RoundingMode.HALF_UP);
+        Order order = orderRepository.findByIdWithLock(orderId)
+                .orElseThrow(() -> new OrderNotFoundException("Order disappeared"));
 
-            walletService.decreaseLockedBalance(userId, assetLocked, amountLocked);
-            walletService.depositAsset(userId, order.getTradingPair().getBaseAsset(), amount);
-
-            if (amountLocked.compareTo(actualCost) > 0) {
-                BigDecimal refund = amountLocked.subtract(actualCost).setScale(USDT_SCALE, RoundingMode.HALF_UP);
-                walletService.depositAsset(userId, assetLocked, refund);
-            }
-        } else {
-            Asset assetLocked = order.getTradingPair().getBaseAsset();
-            BigDecimal amountLocked = amount.setScale(CRYPTO_SCALE, RoundingMode.HALF_UP);
-            BigDecimal amountReceived = amount.multiply(currentPrice).setScale(USDT_SCALE, RoundingMode.HALF_UP);
-
-            walletService.decreaseLockedBalance(userId, assetLocked, amountLocked);
-            walletService.depositAsset(userId, order.getTradingPair().getQuoteAsset(), amountReceived);
+        if (order.getStatus() != OrderStatus.PENDING) {
+            return;
         }
 
-        order.setPrice(currentPrice.setScale(USDT_SCALE, RoundingMode.HALF_UP));
+        Long userId = order.getUser().getId();
+        TradingPair pair = order.getTradingPair();
+
+        if (order.getSide() == OrderSide.BUY) {
+
+            BigDecimal blockedUSDT = order.getLockedAmount();
+            BigDecimal realCost = order.getAmount().multiply(currentPrice).setScale(USDT_SCALE, RoundingMode.HALF_UP);
+            BigDecimal boughtBTC = order.getAmount();
+
+            walletService.withdrawLockedFunds(userId, pair.getQuoteAsset().getAssetSymbol(), blockedUSDT);
+            walletService.deposit(userId, pair.getBaseAsset().getAssetSymbol(), boughtBTC);
+
+            if (blockedUSDT.compareTo(realCost) > 0) {
+                BigDecimal refund = blockedUSDT.subtract(realCost);
+                walletService.deposit(userId, pair.getQuoteAsset().getAssetSymbol(), refund);
+            }
+
+        } else {
+            BigDecimal blockedBTC = order.getLockedAmount();
+            BigDecimal gainedUSDT = order.getAmount().multiply(currentPrice).setScale(USDT_SCALE, RoundingMode.HALF_UP);
+
+            walletService.withdrawLockedFunds(userId, pair.getBaseAsset().getAssetSymbol(), blockedBTC);
+            walletService.deposit(userId, pair.getQuoteAsset().getAssetSymbol(), gainedUSDT);
+        }
+
         order.setStatus(OrderStatus.FILLED);
+
         orderRepository.save(order);
-        log.info("Zlecenie ID: {} wykonane. Cena: {}", order.getId(), currentPrice);
+
+        log.info("Order {} executed at price {}", orderId, currentPrice);
+    }
+
+    @Transactional
+    public void cancelOrder(Long userId, Long orderId ) {
+        Order order = orderRepository.findByIdWithLock(orderId)
+                .orElseThrow(() -> new OrderNotFoundException("Order not found"));
+
+
+        if (order.getStatus() != OrderStatus.PENDING) {
+            throw new IllegalStateException("Cannot cancel order. Current status: " + order.getStatus());
+        }
+
+        String assetToUnlock;
+
+        if (order.getSide() == OrderSide.BUY) {
+            assetToUnlock = order.getTradingPair().getQuoteAsset().getAssetSymbol();
+        } else {
+            assetToUnlock = order.getTradingPair().getBaseAsset().getAssetSymbol();
+        }
+
+        walletService.unlockFunds(userId, assetToUnlock, order.getLockedAmount());
+
+        order.setStatus(OrderStatus.CANCELED);
+        orderRepository.save(order);
+
+        log.info("Order {} canceled successfully. Funds returned: {} {}",
+                orderId, order.getLockedAmount(), assetToUnlock);
     }
 
     public List<SpotOrderResponse> getUserOrders(Long userId) {
@@ -221,4 +258,18 @@ public class OrderService {
                 ))
                 .toList();
     }
+
+    private SpotOrderResponse mapToResponse(Order order) {
+        return new SpotOrderResponse(
+                order.getId(),
+                order.getTradingPair().getTradingPairSymbol(),
+                order.getType(),
+                order.getSide(),
+                order.getAmount(),
+                order.getPrice(),
+                order.getStatus(),
+                order.getCreatedAt()
+        );
+    }
+
 }

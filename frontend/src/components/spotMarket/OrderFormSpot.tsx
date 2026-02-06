@@ -4,6 +4,7 @@ import { useOrderFormSpot } from '../../hooks/useOrderFormSpot';
 export function OrderFormSpot({ base, quote, currentPrice }: any) {
     const logic = useOrderFormSpot({ base, quote, currentPrice });
 
+
     return (
         <div className="bg-[var(--nav-bg)] border border-[var(--nav-border)] rounded-2xl p-5 flex flex-col gap-5 shadow-lg h-full">
             <div className="flex bg-[var(--bg-app)] p-1 rounded-xl">
@@ -64,7 +65,9 @@ export function OrderFormSpot({ base, quote, currentPrice }: any) {
                         placeholder="0.00"
                         className="w-full bg-[var(--bg-app)] border border-[var(--nav-border)] text-[var(--text-app)] font-mono
                         font-bold text-sm rounded-lg p-3 outline-none"/>
-                    <span className="absolute right-3 top-3 text-xs text-[var(--text-muted)] font-bold">{logic.inputMode === 'TOTAL' ? quote : base}</span>
+                    <span className="absolute right-3 top-3 text-xs text-[var(--text-muted)] font-bold">
+                                {logic.inputMode === 'TOTAL' ? quote : base}
+                    </span>
                 </div>
                 <div className="text-[10px] text-[var(--text-muted)] text-right font-mono">
                     ≈ {logic.inputMode === 'TOTAL' ? `${logic.calculatedAmount.toFixed(5)} ${base}` :
@@ -72,12 +75,22 @@ export function OrderFormSpot({ base, quote, currentPrice }: any) {
                 </div>
             </div>
             <div className="py-2 px-1">
-                <input type="range" min="0" max="100" step="1" value={logic.sliderValue} onChange={(e) => logic.handleSliderChange(parseInt(e.target.value))} className={`w-full h-1 bg-[var(--nav-border)] rounded-lg appearance-none cursor-pointer ${logic.side === 'BUY' ? 'accent-emerald-500' : 'accent-red-500'}`} />
+                <input
+                    type="range"
+                    min="0"
+                    max="100"
+                    step="1"
+                    value={logic.sliderValue}
+                    onChange={(e) => logic.handleSliderChange(parseInt(e.target.value))}
+                    className={`w-full h-1 bg-[var(--nav-border)] rounded-lg appearance-none cursor-pointer ${logic.side === 'BUY' ? 
+                                'accent-emerald-500' : 'accent-red-500'}`}/>
                 <div className="flex justify-between text-[10px] text-[var(--text-muted)] mt-2 font-mono font-bold">
                     {[0, 25, 50, 75, 100].map(v => (
-                        <span key={v} className="cursor-pointer hover:text-[var(--text-app)]" onClick={() =>
-                            logic.handleSliderChange(v)}>{v}%</span>
-                    ))}
+                        <span
+                            key={v}
+                            className="cursor-pointer hover:text-[var(--text-app)] transition-colors"
+                            onClick={() => logic.handleSliderChange(v)}>{v}%
+                        </span>))}
                 </div>
             </div>
             <div className="mt-auto border-t border-[var(--nav-border)] pt-4 flex flex-col gap-4">

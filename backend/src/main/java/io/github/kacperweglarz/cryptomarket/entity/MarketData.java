@@ -11,33 +11,35 @@ import java.time.Instant;
 @NoArgsConstructor @Getter
 @Setter @AllArgsConstructor
 @Entity
-@Table(name = "market_data")
+@Table(name = "market_data", indexes ={ @Index(name = "idx_market_data_pair_timestamp", columnList = "trading_pair_id, timestamp")} )
 public class MarketData {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id")
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "trading_pair_id")
+    @JoinColumn(name = "trading_pair_id", nullable = false)
     private TradingPair tradingPair;
 
     @Column(nullable = false)
     private Instant timestamp;
 
-    @Column(nullable = false)
+    @Column(precision = 19, scale = 8, nullable = false)
     private BigDecimal open;
 
-    @Column(nullable = false)
+    @Column(precision = 19, scale = 8, nullable = false)
     private BigDecimal high;
 
-    @Column(nullable = false)
+    @Column(precision = 19, scale = 8, nullable = false)
     private BigDecimal low;
 
-    @Column(nullable = false)
+    @Column(precision = 19, scale = 8, nullable = false)
     private BigDecimal close;
 
-    @Column(nullable = false)
+    @Column(precision = 19, scale = 8, nullable = false)
     private BigDecimal volume;
+
+    @Column(length = 5, nullable = false)
+    private String interval;
 }

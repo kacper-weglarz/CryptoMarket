@@ -4,7 +4,11 @@ import { useSpotOrder } from './useOrders';
 import { SpotOrderRequest } from '../api/orderService';
 import Decimal from 'decimal.js';
 
-interface Props { base: string; quote: string; currentPrice: number; }
+interface Props {
+    base: string;
+    quote: string;
+    currentPrice: number;
+}
 
 export function useOrderFormSpot({ base, quote, currentPrice }: Props) {
     const [side, setSide] = useState<'BUY' | 'SELL'>('BUY');
@@ -14,90 +18,175 @@ export function useOrderFormSpot({ base, quote, currentPrice }: Props) {
     const [inputMode, setInputMode] = useState<'TOTAL' | 'AMOUNT'>('TOTAL');
     const [sliderValue, setSliderValue] = useState(0);
 
+    const [isSliderMoving, setIsSliderMoving] = useState(false);
+
     const { data: walletData } = useWallet();
     const { mutate: placeOrder, isPending: isOrderProcessing } = useSpotOrder();
 
+    const toDecimal = (val: string | number) => {
+        try {
+            const d = new Decimal(val);
+            return d.isNaN() ? new Decimal(0) : d;
+        } catch {
+            return new Decimal(0);
+        }
+    };
+
+    useEffect(() => {
+        setInputValue('');
+        setSliderValue(0);
+        setPrice('');
+    }, [base, quote]);
+
+    useEffect(() => {
+        if (currentPrice && !price) {
+            setPrice(currentPrice.toString());
+        }
+    }, [currentPrice]);
+
     const { availableQuote, availableBase } = useMemo(() => {
         const items = walletData?.items || [];
+        const quoteSymbol = quote.toUpperCase();
+        const baseSymbol = base.toUpperCase();
         return {
-            availableQuote: new Decimal(items.find(i => i.symbol === quote)?.available || 0),
-            availableBase: new Decimal(items.find(i => i.symbol === base)?.available || 0)
+            availableQuote: toDecimal(items.find(i => i.symbol === quoteSymbol)?.available || 0),
+            availableBase: toDecimal(items.find(i => i.symbol === baseSymbol)?.available || 0)
         };
     }, [walletData, base, quote]);
 
-    useEffect(() => {
-        if (currentPrice) {
-            setPrice(new Decimal(currentPrice).toFixed(2));
-            setInputValue('');
-            setSliderValue(0);
-        }
-    }, [base, quote]);
-
     const safePrice = useMemo(() => {
-        const p = (orderType === 'LIMIT' && price) ? price : currentPrice.toString();
-        const d = new Decimal(p || 0);
-        return d.gt(0) ? d : new Decimal(currentPrice || 1);
+        if (orderType === 'LIMIT') {
+            const p = toDecimal(price);
+            return p.gt(0) ? p : new Decimal(0);
+        }
+        return toDecimal(currentPrice || 0);
     }, [orderType, price, currentPrice]);
-
-    const calculatedAmount = useMemo(() => {
-        if (!inputValue) return new Decimal(0);
-        return inputMode === 'TOTAL' ? new Decimal(inputValue).div(safePrice) : new Decimal(inputValue);
-    }, [inputValue, inputMode, safePrice]);
-
-    const calculatedTotal = useMemo(() => {
-        if (!inputValue) return new Decimal(0);
-        return inputMode === 'TOTAL' ? new Decimal(inputValue) : new Decimal(inputValue).mul(safePrice);
-    }, [inputValue, inputMode, safePrice]);
 
     const handleSliderChange = useCallback((val: number) => {
         setSliderValue(val);
+        setIsSliderMoving(true);
+
         const percent = new Decimal(val).div(100);
+
         if (side === 'BUY') {
             const budget = availableQuote.mul(percent);
-            setInputValue(inputMode === 'TOTAL' ? budget.toFixed(2) : budget.div(safePrice).toFixed(8));
+
+            if (inputMode === 'TOTAL') {
+                setInputValue(budget.toFixed(2, Decimal.ROUND_DOWN));
+            } else {
+                if (safePrice.gt(0)) {
+                    setInputValue(budget.div(safePrice).toFixed(8, Decimal.ROUND_DOWN));
+                } else {
+                    setInputValue('0');
+                }
+            }
         } else {
             const amount = availableBase.mul(percent);
-            setInputValue(inputMode === 'AMOUNT' ? amount.toFixed(8) : amount.mul(safePrice).toFixed(2));
+
+            if (inputMode === 'AMOUNT') {
+                setInputValue(amount.toFixed(8, Decimal.ROUND_DOWN));
+            } else {
+                if (safePrice.gt(0)) {
+                    setInputValue(amount.mul(safePrice).toFixed(2, Decimal.ROUND_DOWN));
+                } else {
+                    setInputValue('0');
+                }
+            }
         }
+
+        setTimeout(() => setIsSliderMoving(false), 100);
     }, [side, availableQuote, availableBase, inputMode, safePrice]);
 
-    const toggleInputMode = useCallback(() => {
+    useEffect(() => {
+        if (isSliderMoving) return;
         if (!inputValue) {
+            setSliderValue(0);
+            return;
+        }
+
+        const val = toDecimal(inputValue);
+        if (val.isZero()) {
+            setSliderValue(0);
+            return;
+        }
+
+        let percent = new Decimal(0);
+
+        if (side === 'BUY') {
+            if (availableQuote.gt(0)) {
+                const totalUSDT = inputMode === 'TOTAL' ? val : val.mul(safePrice);
+                percent = totalUSDT.div(availableQuote).mul(100);
+            }
+        } else {
+            if (availableBase.gt(0)) {
+                const totalBase = inputMode === 'AMOUNT' ? val : val.div(safePrice);
+                percent = totalBase.div(availableBase).mul(100);
+            }
+        }
+
+        let finalVal = percent.toNumber();
+        if (finalVal > 100) finalVal = 100;
+        if (finalVal < 0) finalVal = 0;
+
+        if (Math.abs(finalVal - sliderValue) > 1) {
+            setSliderValue(Math.floor(finalVal));
+        }
+
+    }, [inputValue, side, inputMode, availableQuote, availableBase, safePrice, isSliderMoving]);
+
+    const calculatedAmount = useMemo(() => {
+        const val = toDecimal(inputValue);
+        if (val.isZero() || safePrice.isZero()) return new Decimal(0);
+        return inputMode === 'TOTAL' ? val.div(safePrice) : val;
+    }, [inputValue, inputMode, safePrice]);
+
+    const calculatedTotal = useMemo(() => {
+        const val = toDecimal(inputValue);
+        if (val.isZero() || safePrice.isZero()) return new Decimal(0);
+        return inputMode === 'TOTAL' ? val : val.mul(safePrice);
+    }, [inputValue, inputMode, safePrice]);
+
+    const toggleInputMode = useCallback(() => {
+        const val = toDecimal(inputValue);
+        if (val.isZero() || safePrice.isZero()) {
             setInputMode(prev => prev === 'TOTAL' ? 'AMOUNT' : 'TOTAL');
             return;
         }
         if (inputMode === 'TOTAL') {
-            setInputValue(new Decimal(inputValue).div(safePrice).toFixed(8));
+            setInputValue(val.div(safePrice).toFixed(8, Decimal.ROUND_DOWN));
             setInputMode('AMOUNT');
         } else {
-            setInputValue(new Decimal(inputValue).mul(safePrice).toFixed(2));
+            setInputValue(val.mul(safePrice).toFixed(2, Decimal.ROUND_DOWN));
             setInputMode('TOTAL');
         }
     }, [inputValue, inputMode, safePrice]);
 
     const handleOrderClick = () => {
-        if (!inputValue || new Decimal(inputValue).lte(0)) return;
+        if (safePrice.lte(0)) return;
+        const val = toDecimal(inputValue);
+        if (val.lte(0)) return;
 
-        const finalAmount = parseFloat(calculatedAmount.toFixed(8));
-
-
+        const finalAmount = calculatedAmount.toDecimalPlaces(8, Decimal.ROUND_DOWN).toNumber();
         const finalPrice = orderType === 'LIMIT'
-            ? parseFloat(parseFloat(price).toFixed(2))
+            ? toDecimal(price).toDecimalPlaces(2).toNumber()
             : undefined;
 
         placeOrder({
-            symbol: `${base}/${quote}`,
+            symbol: `${base.toUpperCase()}/${quote.toUpperCase()}`,
             amount: finalAmount,
             price: finalPrice,
             orderSide: side,
             orderType: orderType
         } as SpotOrderRequest, {
-            onSuccess: () => { setSliderValue(0); setInputValue(''); }
+            onSuccess: () => {
+                setSliderValue(0);
+                setInputValue('');
+            }
         });
     };
 
     return {
-        side, setSide: (s: any) => { setSide(s); setInputValue(''); setSliderValue(0); },
+        side, setSide,
         orderType, setOrderType,
         price, setPrice,
         inputValue, setInputValue,
@@ -105,6 +194,8 @@ export function useOrderFormSpot({ base, quote, currentPrice }: Props) {
         sliderValue, handleSliderChange,
         availableQuote, availableBase,
         calculatedAmount, calculatedTotal,
-        handleOrderClick, isOrderProcessing, safePrice
+        safePrice,
+        handleOrderClick,
+        isOrderProcessing
     };
 }

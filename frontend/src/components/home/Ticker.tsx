@@ -3,8 +3,8 @@ import { useCryptoPrices } from '../../context/CryptoPriceContext';
 import { motion } from 'framer-motion';
 
 const TICKER_ASSETS = [
-    'BTCUSDT', 'ETHUSDT', 'SOLUSDT', 'BNBUSDT',
-    'ADAUSDT', 'XRPUSDT', 'DOGEUSDT'
+    'BTC/USDT', 'ETH/USDT', 'SOL/USDT', 'BNB/USDT',
+    'ADA/USDT', 'XRP/USDT', 'DOGE/USDT'
 ];
 
 export function Ticker() {

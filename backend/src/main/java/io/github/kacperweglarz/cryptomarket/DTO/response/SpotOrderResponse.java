@@ -21,5 +21,5 @@ public class SpotOrderResponse {
     private BigDecimal amount;
     private BigDecimal price;
     private OrderStatus status;
-    private LocalDateTime timestamp;
+    private LocalDateTime createdAt;
 }

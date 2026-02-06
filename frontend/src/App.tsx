@@ -2,12 +2,13 @@ import { Routes, Route, useLocation , Navigate} from 'react-router-dom';
 import { Navbar } from './components/Navbar';
 import { Home } from './pages/Home';
 import { Login } from './pages/Login';
-import { SignIn } from './pages/SignIn';
+import { Register } from './pages/Register';
 import { Dashboard } from './pages/Dashboard';
 import { WalletView } from './pages/Wallet';
 import { Market } from './pages/Market';
 import { SpotMarket } from './pages/SpotMarket';
 import { cn } from './utils/utils';
+import { AuthProvider } from './context/AuthContext';
 
 
 function App() {
@@ -16,6 +17,7 @@ function App() {
     const isHomePage = location.pathname === '/';
 
     return (
+      <AuthProvider>
         <div className="min-h-screen relative overflow-hidden bg-[var(--bg-app)] text-[var(--text-app)]">
 
             <div className="noise-overlay" />
@@ -32,7 +34,7 @@ function App() {
                 <Routes>
                     <Route path="/" element={<Home />} />
                     <Route path="/login" element={<Login/>} />
-                    <Route path="/signin" element={<SignIn/>} />
+                    <Route path="/signin" element={<Register/>} />
                     <Route path="/dashboard" element={<Dashboard/>} />
                     <Route path="/wallet" element={<WalletView />} />
                     <Route path="/market" element={<Market />} />
@@ -42,6 +44,7 @@ function App() {
             </main>
 
         </div>
+      </AuthProvider>
     );
 }
 

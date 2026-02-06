@@ -1,6 +1,7 @@
 package io.github.kacperweglarz.cryptomarket.serviceTest;
 
 import io.github.kacperweglarz.cryptomarket.entity.Asset;
+import io.github.kacperweglarz.cryptomarket.exception.AssetNotFoundException;
 import io.github.kacperweglarz.cryptomarket.repository.AssetRepository;
 import io.github.kacperweglarz.cryptomarket.service.AssetService;
 import org.junit.jupiter.api.Test;
@@ -8,6 +9,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
@@ -22,69 +24,98 @@ class AssetServiceTest {
     @InjectMocks
     AssetService assetService;
 
-    //CreateAsset
+    //getOrCreateAsset---------------
     @Test
-    void shouldCreateAssetAsset_WhenSymbolIsUnique() {
+    void shouldReturnExistingAsset() {
 
         String assetSymbol = "BTC";
         String assetName = "Bitcoin";
-
-        when(assetRepository.existsByAssetSymbol(assetSymbol)).thenReturn(Boolean.FALSE);
-        when(assetRepository.save(any(Asset.class))).thenAnswer(i -> i.getArgument(0));
-
-        Asset asset = assetService.createAsset(assetSymbol, assetName);
-
-        assertNotNull(asset);
-        assertEquals(assetSymbol, asset.getAssetSymbol());
-        assertEquals(assetName, asset.getAssetName());
-
-        verify(assetRepository, times(1)).save(any(Asset.class));
-    }
-
-    //CreateAsset
-    @Test
-    void shouldThrowException_WhenSymbolIsNotUnique() {
-
-        String assetSymbol = "BTC";
-        String assetName = "Bitcoin";
-
-        when(assetRepository.existsByAssetSymbol(assetSymbol)).thenReturn(Boolean.TRUE);
-
-        assertThrows(IllegalArgumentException.class, () ->
-                assetService.createAsset(assetSymbol, assetName),
-                "Asset symbol should be unique");
-
-        verify(assetRepository, never()).save(any(Asset.class));
-        }
-
-    //GetORCreateAsset
-    @Test
-    void shouldReturnExistingAsset_WhenItAlreadyExists() {
-
-        String assetSymbol = "ETH";
         Asset existingAsset = new Asset();
         existingAsset.setAssetSymbol(assetSymbol);
+        existingAsset.setAssetName(assetName);
 
-        when(assetRepository.getAssetsByAssetSymbol(assetSymbol)).thenReturn(existingAsset);
+        when(assetRepository.findByAssetSymbol(assetSymbol)).thenReturn(Optional.of(existingAsset));
 
-        Asset asset = assetService.getOrCreateAsset(assetSymbol, "Ethereum");
+        Asset asset = assetService.getOrCreateAsset("BTC", "Bitcoin");
 
         assertEquals(existingAsset, asset);
         verify(assetRepository, never()).save(any(Asset.class));
+        verify(assetRepository, times(1)).findByAssetSymbol(assetSymbol);
     }
 
     @Test
-    void shouldCreateNewAsset_WhenItDoesNotExist() {
-        String assetSymbol = "DOGE";
-        String assetName = "Dogecoin";
+    void shouldReturnNewAsset() {
 
-        when(assetRepository.getAssetsByAssetSymbol(assetSymbol)).thenReturn(null);
+        String assetSymbol = "BTC";
+        String assetName = "Bitcoin";
+
+        when(assetRepository.findByAssetSymbol(assetSymbol)).thenReturn(Optional.empty());
         when(assetRepository.save(any(Asset.class))).thenAnswer(i -> i.getArgument(0));
 
-        Asset asset = assetService.getOrCreateAsset(assetSymbol, assetName);
+        Asset asset = assetService.getOrCreateAsset("BTC", "Bitcoin");
 
         assertNotNull(asset);
-        assertEquals(assetSymbol, asset.getAssetSymbol());
-        verify(assetRepository, times(1)).save(any(Asset.class));
+        assertEquals("BTC", asset.getAssetSymbol());
+        assertEquals("Bitcoin", asset.getAssetName());
+
+
+        verify(assetRepository).save(argThat(a ->
+                a.getAssetSymbol().equals(assetSymbol) &&
+                a.getAssetName().equals(assetName)
+        ));
     }
+
+   @Test
+    void shouldSetUnknownAssetName() {
+
+       String assetSymbol = "BTC";
+
+       when(assetRepository.findByAssetSymbol(assetSymbol)).thenReturn(Optional.empty());
+       when(assetRepository.save(any(Asset.class))).thenAnswer(i -> i.getArgument(0));
+
+       Asset asset = assetService.getOrCreateAsset(assetSymbol, null);
+
+       assertNotNull(asset);
+       assertEquals("BTC", asset.getAssetSymbol());
+       assertEquals("Unknown Asset", asset.getAssetName());
+
+       verify(assetRepository).save(argThat(a ->
+               a.getAssetSymbol().equals(assetSymbol) &&
+               a.getAssetName().equals("Unknown Asset")));
+   }
+    //End getOrCreateAsset---------------
+
+
+
+    //getAsset --------------------------
+    @Test
+    void shouldReturnAsset() {
+
+        String assetSymbol = "BTC";
+        String assetName = "Bitcoin";
+
+        Asset asset = new Asset();
+        asset.setAssetSymbol(assetSymbol);
+        asset.setAssetName(assetName);
+
+        when(assetRepository.findByAssetSymbol(assetSymbol)).thenReturn(Optional.of(asset));
+
+        Asset returnedAsset = assetService.getAsset(assetSymbol);
+
+        assertEquals(asset, returnedAsset);
+        verify(assetRepository, times(1)).findByAssetSymbol(assetSymbol);
+        verify(assetRepository, never()).save(any(Asset.class));
+    }
+
+    @Test
+    void shouldThrowException_WhenAssetDoesNotExist() {
+
+        String assetSymbol = "BTC";
+
+        when(assetRepository.findByAssetSymbol(assetSymbol)).thenReturn(Optional.empty());
+
+        assertThrows(AssetNotFoundException.class, () -> assetService.getAsset(assetSymbol));
+        verify(assetRepository, times(1)).findByAssetSymbol(assetSymbol);
+    }
+    //End getAsset -----------------------
 }

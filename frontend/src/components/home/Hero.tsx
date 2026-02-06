@@ -1,7 +1,10 @@
 import { ArrowRight, TrendingUp } from 'lucide-react';
 import { TradingWidget } from '../TradingWidget';
+import { useNavigate } from 'react-router-dom';
 
 export function Hero() {
+    const navigate = useNavigate();
+
     return (
         <section className="py-16 px-6 relative z-10">
             <div className="mx-auto max-w-7xl grid lg:grid-cols-2 gap-12 items-center">
@@ -22,7 +25,8 @@ export function Hero() {
                         Naucz się handlować Bitcoinem i setkami innych tokenów, korzystając z wirtualnych funduszy.
                     </p>
                     <div className="mt-10 flex flex-wrap items-center gap-4">
-                        <button className="flex items-center gap-2 rounded-full bg-emerald-500 px-8 py-4 text-base font-bold text-white
+                        <button onClick={() => navigate('/register')}
+                                className="flex items-center gap-2 rounded-full bg-emerald-500 px-8 py-4 text-base font-bold text-white
                                             transition-all hover:bg-emerald-600 hover:shadow-lg hover:shadow-emerald-500/25 hover:-translate-y-1">
                             Otwórz Darmowe Konto
                             <ArrowRight className="h-5 w-5" />

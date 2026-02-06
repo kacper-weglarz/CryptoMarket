@@ -6,6 +6,7 @@ import io.github.kacperweglarz.cryptomarket.entity.User;
 import io.github.kacperweglarz.cryptomarket.exception.UserNotFoundException;
 import io.github.kacperweglarz.cryptomarket.service.UserService;
 import io.github.kacperweglarz.cryptomarket.service.WalletService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -40,6 +41,7 @@ public class WalletController {
     @PostMapping("/initialize")
     public ResponseEntity<Void> initializeWallet(Authentication authentication) {
         String email = authentication.getName();
+
         User user = userService.findUserByEmail(email)
                 .orElseThrow(() -> new UserNotFoundException("User not found with email: " + email));
 
@@ -49,14 +51,14 @@ public class WalletController {
     }
 
     @PostMapping("/deposit")
-    public ResponseEntity<WalletResponse> deposit(@RequestBody DepositRequest depositRequest, Authentication authentication) {
+    public ResponseEntity<WalletResponse> deposit(@Valid @RequestBody DepositRequest depositRequest, Authentication authentication) {
 
         String email = authentication.getName();
 
         User user = userService.findUserByEmail(email)
                 .orElseThrow(() -> new UserNotFoundException("User not found with email: " + email));
 
-        walletService.deposit(user.getId(), depositRequest.getAmount());
+        walletService.deposit(user.getId(), depositRequest.getAssetSymbol(), depositRequest.getAmount());
 
         WalletResponse response = walletService.getUserWallet(user.getId());
 

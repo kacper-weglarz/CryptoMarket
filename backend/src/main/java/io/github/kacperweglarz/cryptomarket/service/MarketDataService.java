@@ -3,6 +3,7 @@ package io.github.kacperweglarz.cryptomarket.service;
 import io.github.kacperweglarz.cryptomarket.entity.MarketData;
 import io.github.kacperweglarz.cryptomarket.entity.TradingPair;
 import io.github.kacperweglarz.cryptomarket.repository.MarketDataRepository;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
@@ -13,6 +14,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Service
+@Slf4j
 public class MarketDataService {
 
     private final MarketDataRepository marketDataRepository;
@@ -31,87 +33,76 @@ public class MarketDataService {
 
     public MarketData updatePrices(String symbol, BigDecimal price, BigDecimal volume, BigDecimal change) {
 
-        TradingPair thisTradingPair = knownTradingPairs.get(symbol);
-
-        if (thisTradingPair == null) {
-
-            thisTradingPair = tradingPairService.getOrCreateTradingPair(symbol);
-
-            knownTradingPairs.put(symbol, thisTradingPair);
-        }
+        TradingPair pair = knownTradingPairs.computeIfAbsent(symbol, tradingPairService::getOrCreateTradingPair);
 
         Instant now = Instant.now();
         Instant candleTimeStamp = now.truncatedTo(ChronoUnit.MINUTES);
 
-        MarketData thisCandle = currentCandles.get(symbol);
+        MarketData currentCandle = currentCandles.get(symbol);
 
-        MarketData returnCandle;
+        if (currentCandle == null) {
 
-        if (thisCandle == null) {
+            currentCandle = createCandle(pair, price, volume, candleTimeStamp);
+            currentCandles.put(symbol, currentCandle);
 
-            returnCandle = createCandle(thisTradingPair,price,volume,candleTimeStamp);
+            log.info("Creating new candle for {}: Open Price {}", symbol, price);
 
-            currentCandles.put(symbol, returnCandle);
+        } else if (candleTimeStamp.isAfter(currentCandle.getTimestamp())) {
 
-        } else if (candleTimeStamp.isAfter(thisCandle.getTimestamp())) {
+            log.info("Closing candle for {}: Close Price {}", symbol, currentCandle.getClose());
 
-            //marketDataRepository.save(thisCandle);
+            //marketDataRepository.save(currentCandle);
 
-            returnCandle = createCandle(thisTradingPair,price,volume,candleTimeStamp);
-
-            currentCandles.put(symbol, returnCandle);
+            currentCandle = createCandle(pair, price, volume, candleTimeStamp);
+            currentCandles.put(symbol, currentCandle);
 
         } else {
 
-            if (price.compareTo(thisCandle.getHigh()) > 0) {
-                thisCandle.setHigh(price);
-            }
-            if (price.compareTo(thisCandle.getLow()) < 0) {
-                thisCandle.setLow(price);
-            }
-            thisCandle.setClose(price);
-            thisCandle.setVolume(thisCandle.getVolume().add(volume));
+            updateExistingCandle(currentCandle, price, volume);
 
-            returnCandle = thisCandle;
+            log.info("Updating candle for {}: Close Price {}", symbol, currentCandle.getClose());
         }
 
         PriceUpdateDto update = new PriceUpdateDto(symbol, price, change, volume);
+
         messagingTemplate.convertAndSend("/topic/prices", update);
 
-        System.out.println(update);
-        return returnCandle;
+        return currentCandle;
     }
 
-    public record PriceUpdateDto(String symbol, BigDecimal price, BigDecimal change, BigDecimal volume) {}
+    private void updateExistingCandle(MarketData candle, BigDecimal price, BigDecimal volume) {
+        if (price.compareTo(candle.getHigh()) > 0) {
+            candle.setHigh(price);
+        }
 
+        if (price.compareTo(candle.getLow()) < 0) {
+            candle.setLow(price);
+        }
 
+        candle.setClose(price);
+        candle.setVolume(candle.getVolume().add(volume));
+    }
 
-    private MarketData createCandle(TradingPair tradingPair, BigDecimal price, BigDecimal volume, Instant timestamp) {
+    private MarketData createCandle(TradingPair pair, BigDecimal price, BigDecimal volume, Instant timestamp) {
+        MarketData marketData = new MarketData();
 
-        MarketData newMarketData = new MarketData();
+        marketData.setTradingPair(pair);
+        marketData.setTimestamp(timestamp);
+        marketData.setOpen(price);
+        marketData.setHigh(price);
+        marketData.setLow(price);
+        marketData.setClose(price);
+        marketData.setVolume(volume);
+        marketData.setInterval("1m");
 
-        newMarketData.setOpen(price);
-        newMarketData.setHigh(price);
-        newMarketData.setLow(price);
-        newMarketData.setClose(price);
-
-        newMarketData.setVolume(volume);
-
-        newMarketData.setTimestamp(timestamp);
-
-        newMarketData.setTradingPair(tradingPair);
-
-        return newMarketData;
+        return marketData;
     }
 
     public BigDecimal getCurrentPrice(String symbol) {
-
-        MarketData latestCandle =  currentCandles.get(symbol);
-
-        if (latestCandle != null) {
-            return latestCandle.getClose();
-        }
-
-        return BigDecimal.ZERO;
+        MarketData latest = currentCandles.get(symbol);
+        return (latest != null) ? latest.getClose() : null;
     }
+
+    public record PriceUpdateDto(String symbol, BigDecimal price, BigDecimal change, BigDecimal volume) {}
 }
+

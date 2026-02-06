@@ -40,7 +40,7 @@ class TradingPairServiceTest {
 
         String tradingPairSymbol = "BTC/USDT";
 
-        when(tradingPairRepository.existsTradingPair_ByTradingPairSymbol(tradingPairSymbol)).thenReturn(Boolean.FALSE);
+        when(tradingPairRepository.existsTradingPairByTradingPairSymbol(tradingPairSymbol)).thenReturn(Boolean.FALSE);
         when(tradingPairRepository.save(any(TradingPair.class))).thenAnswer(i->i.getArgument(0));
 
         TradingPair newTradingPair  = tradingPairService.createTradingPair(baseAsset, quoteAsset);
@@ -77,7 +77,7 @@ class TradingPairServiceTest {
 
         String tradingPairSymbol = "BTC/USDT";
 
-        when(tradingPairRepository.existsTradingPair_ByTradingPairSymbol(tradingPairSymbol)).thenReturn(Boolean.TRUE);
+        when(tradingPairRepository.existsTradingPairByTradingPairSymbol(tradingPairSymbol)).thenReturn(Boolean.TRUE);
 
         assertThrows(IllegalArgumentException.class, () -> tradingPairService.createTradingPair(baseAsset, quoteAsset));
 

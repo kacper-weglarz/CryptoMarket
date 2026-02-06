@@ -22,13 +22,11 @@ const CryptoPriceContext = createContext<CryptoPriceContextType | undefined>(und
 export const CryptoPriceProvider = ({ children }: { children: ReactNode }) => {
     const [prices, setPrices] = useState<Record<string, PriceData>>({});
     const [isConnected, setIsConnected] = useState(false);
-
     const [favorites, setFavorites] = useState<string[]>(() => {
         try {
             const saved = localStorage.getItem('cryptoFavorites');
             return saved ? JSON.parse(saved) : [];
         } catch (e) {
-            console.error("Błąd odczytu localStorage", e);
             return [];
         }
     });
@@ -36,26 +34,35 @@ export const CryptoPriceProvider = ({ children }: { children: ReactNode }) => {
     const clientRef = useRef<Stomp.Client | null>(null);
 
     const connect = useCallback(() => {
+        if (clientRef.current?.connected) return;
+
         const socket = new SockJS(SOCKET_URL);
         const client = Stomp.over(socket);
         client.debug = () => {};
 
         client.connect({}, () => {
-            console.log('WebSocket Connected');
             setIsConnected(true);
             clientRef.current = client;
 
             client.subscribe('/topic/prices', (message) => {
                 const update: PriceData = JSON.parse(message.body);
-                const cleanSymbol = update.symbol.replace('/', '').toUpperCase();
-                setPrices((prev) => ({
-                    ...prev,
-                    [cleanSymbol]: { ...update, symbol: cleanSymbol },
-                }));
+
+                const symbolKey = update.symbol.toUpperCase();
+
+                setPrices((prev) => {
+
+                    if (prev[symbolKey] && prev[symbolKey].price === update.price) {
+                        return prev;
+                    }
+                    return {
+                        ...prev,
+                        [symbolKey]: update,
+                    };
+                });
             });
         }, (error) => {
-            console.error('WebSocket Error - reconnecting in 5s:', error);
             setIsConnected(false);
+            console.error('Socket error, reconnecting in 5s' + error);
             setTimeout(connect, 5000);
         });
     }, []);
@@ -63,19 +70,19 @@ export const CryptoPriceProvider = ({ children }: { children: ReactNode }) => {
     useEffect(() => {
         connect();
         return () => {
-            if (clientRef.current?.connected) {
+            if (clientRef.current) {
                 clientRef.current.disconnect(() => {});
+                clientRef.current = null;
             }
         };
     }, [connect]);
 
     const toggleFavorite = useCallback((symbol: string) => {
         setFavorites(prev => {
-            const newFavs = prev.includes(symbol)
-                ? prev.filter(s => s !== symbol)
-                : [...prev, symbol];
-            localStorage.setItem('cryptoFavorites', JSON.stringify(newFavs));
-            return newFavs;
+            const isFav = prev.includes(symbol);
+            const next = isFav ? prev.filter(s => s !== symbol) : [...prev, symbol];
+            localStorage.setItem('cryptoFavorites', JSON.stringify(next));
+            return next;
         });
     }, []);
 
@@ -95,8 +102,6 @@ export const CryptoPriceProvider = ({ children }: { children: ReactNode }) => {
 
 export const useCryptoPrices = () => {
     const context = useContext(CryptoPriceContext);
-    if (!context) {
-        throw new Error('useCryptoPrices must be used within a CryptoPriceProvider');
-    }
+    if (!context) throw new Error('useCryptoPrices must be used within provider');
     return context;
 };

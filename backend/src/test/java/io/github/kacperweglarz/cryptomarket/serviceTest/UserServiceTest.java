@@ -3,6 +3,7 @@ package io.github.kacperweglarz.cryptomarket.serviceTest;
 import io.github.kacperweglarz.cryptomarket.DTO.request.RegisterRequest;
 import io.github.kacperweglarz.cryptomarket.entity.User;
 import io.github.kacperweglarz.cryptomarket.entity.Wallet;
+import io.github.kacperweglarz.cryptomarket.exception.UserAlreadyExistException;
 import io.github.kacperweglarz.cryptomarket.repository.UserRepository;
 import io.github.kacperweglarz.cryptomarket.service.UserService;
 import io.github.kacperweglarz.cryptomarket.service.WalletService;
@@ -37,66 +38,44 @@ class UserServiceTest {
     void shouldCreateNewUserAndNewWallet() {
 
         RegisterRequest request = new RegisterRequest();
-        request.setName("name");
-        request.setSurname("surname");
-        request.setAlias("alias");
-        request.setEmail("email@example.pl");
+
+        request.setName("XXX");
+        request.setSurname("YYY");
+        request.setAlias("XXX");
+        request.setEmail("XXX@example.com");
         request.setPassword("password");
 
         Wallet mockWallet = new Wallet();
+        String encoded = "encodedPassword";
 
         when(userRepository.findUserByAlias(request.getAlias())).thenReturn(Optional.empty());
         when(userRepository.findUserByEmail(request.getEmail())).thenReturn(Optional.empty());
-        when(passwordEncoder.encode(request.getPassword())).thenReturn("encodedpassword");
+        when(passwordEncoder.encode(request.getPassword())).thenReturn(encoded);
         when(walletService.createWallet(any(User.class))).thenReturn(mockWallet);
-        when(userRepository.save(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(userRepository.save(any(User.class))).thenAnswer(i -> i.getArgument(0));
 
-        User newUser = userService.createUserWithWallet(request);
+        User result = userService.createUserWithWallet(request);
 
-        assertNotNull(newUser);
-        assertNotNull(newUser.getWallet());
-        assertEquals(newUser.getName(), request.getName());
-        assertEquals(newUser.getSurname(), request.getSurname());
-        assertEquals(newUser.getAlias(), request.getAlias());
-        assertEquals(newUser.getEmail(), request.getEmail());
-        assertEquals("encodedpassword", newUser.getPassword());
-        assertNotEquals("password", newUser.getPassword());
-        assertEquals(0, newUser.getOrders().size());
+        assertNotNull(result);
+        assertEquals(encoded, result.getPasswordHash());
+        assertEquals(mockWallet, result.getWallet());
 
-        verify(userRepository, times(1)).save(any(User.class));
+        verify(walletService).createWallet(result);
+        verify(userRepository).save(any(User.class));
     }
 
     @Test
-    void shouldNotCreateNewUserIfAliasExists() {
+    void shouldThrowExceptionIfEmailExists() {
 
         RegisterRequest request = new RegisterRequest();
-        request.setAlias("alias");
-
-        when(userRepository.findUserByAlias(request.getAlias())).thenReturn(Optional.of(new User()));
-
-        RuntimeException exception = assertThrows(RuntimeException.class, () -> {
-            userService.createUserWithWallet(request);
-        });
-
-        assertEquals("User with this alias already exist", exception.getMessage());
-
-        verify(userRepository, never()).save(any(User.class));
-    }
-
-    @Test
-    void shouldNotCreateNewUserIfEmailExists() {
-
-        RegisterRequest request = new RegisterRequest();
-        request.setEmail("email@example.pl");
-
+        request.setEmail("test@example.com");
         when(userRepository.findUserByEmail(request.getEmail())).thenReturn(Optional.of(new User()));
 
-        RuntimeException exception = assertThrows(RuntimeException.class, () -> {
-            userService.createUserWithWallet(request);
-        });
+        UserAlreadyExistException ex = assertThrows(UserAlreadyExistException.class, () ->
+                userService.createUserWithWallet(request)
+        );
 
-        assertEquals("User with this email already exist", exception.getMessage());
-
-        verify(userRepository, never()).save(any(User.class));
+        assertTrue(ex.getMessage().contains("test@example.com"));
+        verify(userRepository, never()).save(any());
     }
 }

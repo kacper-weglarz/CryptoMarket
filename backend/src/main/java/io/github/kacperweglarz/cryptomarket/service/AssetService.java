@@ -1,12 +1,16 @@
 package io.github.kacperweglarz.cryptomarket.service;
 
 import io.github.kacperweglarz.cryptomarket.entity.Asset;
+import io.github.kacperweglarz.cryptomarket.exception.AssetNotFoundException;
 import io.github.kacperweglarz.cryptomarket.repository.AssetRepository;
+import jakarta.annotation.PostConstruct;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import java.util.HashMap;
 import java.util.Map;
 
+@Slf4j
 @Service
 public class AssetService {
 
@@ -30,37 +34,31 @@ public class AssetService {
         ASSET_NAMES.put("SOL", "Solana");
     }
 
-    public Asset createAsset(String assetSymbol, String assetName) {
-
-        if (assetRepository.existsByAssetSymbol(assetSymbol)) {
-            throw new IllegalArgumentException("Asset Symbol already exists");
-        }
-
-        return saveAsset(assetSymbol, assetName);
+    @PostConstruct
+    public void initAssets() {
+        ASSET_NAMES.forEach(this::getOrCreateAsset);
+        log.info("Assets initialized");
     }
 
     public Asset getOrCreateAsset(String assetSymbol, String assetName) {
 
-        Asset existingAsset = assetRepository.getAssetsByAssetSymbol(assetSymbol);
+        String upperSymbol = assetSymbol.toUpperCase().trim();
 
-        if (existingAsset != null) {
-            return existingAsset;
-        }
+        return assetRepository.findByAssetSymbol(upperSymbol)
+                .orElseGet(() -> {
+                    log.info("Creating new asset: {}", upperSymbol);
 
-        return saveAsset(assetSymbol, assetName);
+                    Asset newAsset = new Asset();
+
+                    newAsset.setAssetSymbol(upperSymbol);
+                    newAsset.setAssetName(assetName != null ? assetName : "Unknown Asset");
+
+                    return assetRepository.save(newAsset);
+                });
     }
 
-    private Asset saveAsset(String assetSymbol, String assetName) {
-
-        Asset newAsset = new Asset();
-        newAsset.setAssetSymbol(assetSymbol);
-
-        String assetNameChanger = ASSET_NAMES.getOrDefault(assetSymbol, assetName);
-
-        newAsset.setAssetName(assetNameChanger);
-
-        assetRepository.save(newAsset);
-
-        return newAsset;
+    public Asset getAsset(String symbol) {
+        return assetRepository.findByAssetSymbol(symbol.toUpperCase())
+                .orElseThrow(() -> new AssetNotFoundException("Asset not found: " + symbol));
     }
 }

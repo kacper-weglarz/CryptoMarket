@@ -40,23 +40,27 @@ public class MockDataGenerator {
     public void generateFakeData() {
 
         mockPrices.forEach((symbol, currentPrice) -> {
-            double changeFactor = 1 + (random.nextDouble() - 0.5) * 0.01;
+
+            double volatility = 0.005;
+            double changeFactor = 1 + (random.nextDouble() - 0.5) * 2 * volatility;
 
             BigDecimal newRawPrice = currentPrice.multiply(BigDecimal.valueOf(changeFactor));
 
-            int scale = newRawPrice.compareTo(BigDecimal.TEN) < 0 ? 4 : 2;
-
+            int scale = newRawPrice.compareTo(BigDecimal.TEN) < 0 ? 6 : 2;
             BigDecimal newPrice = newRawPrice.setScale(scale, RoundingMode.HALF_UP);
 
             mockPrices.put(symbol, newPrice);
 
-            BigDecimal fakeChange = BigDecimal.valueOf((random.nextDouble() - 0.5) * 10.0)
+            BigDecimal fakeVolume = BigDecimal.valueOf(random.nextDouble() * 5.0)
                     .setScale(2, RoundingMode.HALF_UP);
 
-            marketDataService.updatePrices(symbol, newPrice, BigDecimal.TEN, fakeChange);
 
+            BigDecimal fakeChange24h = BigDecimal.valueOf((random.nextDouble() - 0.5) * 5.0)
+                    .setScale(2, RoundingMode.HALF_UP);
+
+            marketDataService.updatePrices(symbol, newPrice, fakeVolume, fakeChange24h);
         });
 
-        log.info("Mock data sent for {} pairs", mockPrices.size());
+        log.debug("Mock market tick processed for {} pairs", mockPrices.size());
     }
 }

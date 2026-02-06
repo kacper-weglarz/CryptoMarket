@@ -1,7 +1,6 @@
 import { DashboardLayout } from '../components/DashboardLayout';
 import { BalanceCard } from '../components/dashboard/BalanceCard';
 import { FearGreedWidget } from '../components/dashboard/FearGreedWidget';
-import { QuickSwapWidget } from '../components/dashboard/QuickSwapWidget';
 import { PositionsSlider} from '../components/dashboard/PositionSlider';
 import { HotMarketsWidget } from '../components/dashboard/HotMarketsWidget';
 
@@ -28,9 +27,6 @@ export function Dashboard() {
                 <div className="w-full xl:col-span-3 flex flex-col gap-6 h-full">
                     <div className="h-[280px]">
                         <FearGreedWidget />
-                    </div>
-                    <div className="flex-1">
-                        <QuickSwapWidget />
                     </div>
                 </div>
             </div>

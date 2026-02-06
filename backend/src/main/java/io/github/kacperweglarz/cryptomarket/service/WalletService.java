@@ -13,11 +13,9 @@ import io.github.kacperweglarz.cryptomarket.repository.WalletRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 @Service
 public class WalletService {
@@ -37,31 +35,30 @@ public class WalletService {
 
     public Wallet createWallet(User user) {
 
-        Asset asset = assetService.getOrCreateAsset("USDT", "Tether");
-
         Wallet newWallet = new Wallet();
         newWallet.setUser(user);
         newWallet.setInitialized(false);
+        newWallet.setWalletItems(new ArrayList<>());
 
-        if(newWallet.getWalletItems() == null) {
-            newWallet.setWalletItems(new ArrayList<>());
-        }
+        walletRepository.save(newWallet);
 
-        createNewWalletItem(newWallet, asset, BigDecimal.ZERO);
+        Asset ustdAsset = assetService.getOrCreateAsset("USDT", "Tether");
+        createNewWalletItem(newWallet, ustdAsset, BigDecimal.ZERO);
 
         return newWallet;
     }
 
+    @Transactional(readOnly = true)
     public WalletResponse getUserWallet(Long id) {
 
         Wallet wallet = getWalletOrThrow(id);
 
         List<WalletResponse.WalletItemResponse> itemsDto = wallet.getWalletItems().stream()
-                .filter(item -> item.getAmount().compareTo(BigDecimal.ZERO) > 0)
+                .filter(item -> item.getTotalBalance().compareTo(BigDecimal.ZERO) > 0)
                 .map(item -> new WalletResponse.WalletItemResponse(
                         item.getAsset().getAssetSymbol(),
                         item.getAsset().getAssetName(),
-                        item.getAmount(),
+                        item.getTotalBalance(),
                         item.getAvailableBalance(),
                         item.getLockedBalance()
                 ))
@@ -72,110 +69,90 @@ public class WalletService {
 
     @Transactional
     public void initializeWallet(Long userId) {
-        Wallet wallet = walletRepository.findByUserId(userId)
-                .orElseThrow(() -> new WalletNotFoundException("Wallet not found"));
+
+        Wallet wallet = getWalletOrThrow(userId);
 
         if (wallet.isInitialized()) {
-            throw new InvalidAmountException("Wallet has already been initialized! Cannot deposit initial funds again.");
+            throw new InsufficientFundsException("Wallet has already been initialized! Cannot deposit initial funds again.");
         }
 
         int updatedRows = walletItemRepository.depositFunds(wallet.getId(), "USDT", INITIAL_CAPITAL);
 
         if (updatedRows == 0) {
-            Asset usdt = assetService.getOrCreateAsset("USDT", "Tether");
-            createNewWalletItem(wallet, usdt, INITIAL_CAPITAL);
+            Asset usdtAsset = assetService.getOrCreateAsset("USDT", "Tether");
+            createNewWalletItem(wallet, usdtAsset, INITIAL_CAPITAL);
         }
 
         wallet.setInitialized(true);
-
         walletRepository.save(wallet);
     }
 
     @Transactional
-    public void deposit(Long id, BigDecimal amount) {
+    public void deposit(Long id, String symbol, BigDecimal amount) {
 
         if (amount.compareTo(BigDecimal.ZERO) < 0) {
-            throw new InvalidAmountException(amount.toString());
+            throw new InvalidAmountException("Amount must be greater than or equal to zero: " + amount);
         }
 
         Wallet wallet = getWalletOrThrow(id);
+        String upperSymbol = symbol.toUpperCase();
 
-        int rowUpdate = walletItemRepository.depositFunds(wallet.getId(), "USDT", amount);
+        int rowUpdate = walletItemRepository.depositFunds(wallet.getId(), upperSymbol, amount);
 
         if (rowUpdate == 0) {
-            Asset usdtAsset = assetService.getOrCreateAsset("USDT", "Tether");
+            Asset usdtAsset = assetService.getOrCreateAsset(upperSymbol, "Unknown Asset");
             createNewWalletItem(wallet, usdtAsset, amount);
         }
     }
 
     @Transactional
-    public void trade(Long id, Asset assetToSpend, Asset assetToReceive, BigDecimal amountToSpend, BigDecimal amountToReceive) {
-
+    public void lockFunds(Long id, String symbol, BigDecimal amountToLock) {
         Wallet wallet = getWalletOrThrow(id);
 
-        int subtractResult = walletItemRepository.subtractFunds(wallet.getId(), assetToSpend.getAssetSymbol(), amountToSpend);
-
-        if (subtractResult == 0) {
-            throw new InsufficientFundsException(assetToSpend.getAssetSymbol() + " " + amountToSpend);
-        }
-        int addResult = walletItemRepository.depositFunds(wallet.getId(), assetToReceive.getAssetSymbol(), amountToReceive);
-
-        if (addResult == 0) {
-            createNewWalletItem(wallet, assetToReceive, amountToReceive);
-        }
-    }
-
-    @Transactional
-    public void lockFunds(Long id, Asset asset, BigDecimal amountToLock) {
-        Wallet wallet = getWalletOrThrow(id);
-
-        int rowsUpdated = walletItemRepository.lockFunds(wallet.getId(), asset.getAssetSymbol(), amountToLock);
+        int rowsUpdated = walletItemRepository.lockFunds(wallet.getId(), symbol, amountToLock);
 
         if (rowsUpdated == 0) {
-            throw new InsufficientFundsException(asset.getAssetSymbol() + " " + amountToLock);
+            throw new InsufficientFundsException(symbol + "Lock amount " + amountToLock);
         }
     }
 
     @Transactional
-    public void depositAsset(Long userId, Asset asset, BigDecimal amount) {
+    public void unlockFunds(Long id, String symbol, BigDecimal amountToUnlock) {
+        Wallet wallet = getWalletOrThrow(id);
 
-        Wallet wallet = getWalletOrThrow(userId);
+        int rowsUpdated = walletItemRepository.unlockFunds(wallet.getId(), symbol, amountToUnlock);
 
-        int updated = walletItemRepository.depositFunds(wallet.getId(), asset.getAssetSymbol(), amount);
-
-        if (updated == 0) {
-            createNewWalletItem(wallet, asset, amount);
+        if (rowsUpdated == 0) {
+            throw new InsufficientFundsException(symbol + "Unlock amount " + amountToUnlock);
         }
     }
 
     @Transactional
-    public void decreaseLockedBalance(Long userId, Asset asset, BigDecimal amount) {
+    public void withdrawLockedFunds(Long userId, String symbol, BigDecimal amount) {
 
         Wallet wallet = getWalletOrThrow(userId);
 
-        int rows = walletItemRepository.decreaseLockedBalance(wallet.getId(), asset.getAssetSymbol(), amount);
+        int rows = walletItemRepository.decreaseLockedBalance(wallet.getId(), symbol, amount);
 
         if (rows == 0) {
-            throw new InsufficientFundsException("Decrease locked balanced " + asset.getAssetSymbol());
+            throw new InsufficientFundsException("Locked funds missing " + symbol + " : " + amount);
         }
     }
 
-    private void createNewWalletItem(Wallet wallet, Asset asset, BigDecimal initialAmount) {
+    @Transactional
+    public void transferFundsAfterTrade(Long userId, String symbol, BigDecimal amount) {
+        deposit(userId, symbol, amount);
+    }
 
-        Optional<WalletItem> existing = walletItemRepository.findByWalletIdAndSymbol(wallet.getId(), asset.getAssetSymbol());
+    private void createNewWalletItem(Wallet wallet, Asset asset, BigDecimal initialAvailable) {
+        WalletItem newItem = new WalletItem();
 
-        if (existing.isPresent()) {
-            walletItemRepository.depositFunds(wallet.getId(), asset.getAssetSymbol(), initialAmount);
-        } else {
-            WalletItem newItem = new WalletItem();
-            newItem.setWallet(wallet);
-            newItem.setAsset(asset);
-            newItem.setAmount(initialAmount);
-            newItem.setAvailableBalance(initialAmount);
-            newItem.setLockedBalance(BigDecimal.ZERO);
+        newItem.setWallet(wallet);
+        newItem.setAsset(asset);
+        newItem.setAvailableBalance(initialAvailable);
+        newItem.setLockedBalance(BigDecimal.ZERO);
 
-            walletItemRepository.save(newItem);
-        }
+        walletItemRepository.save(newItem);
     }
 
 

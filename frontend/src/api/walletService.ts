@@ -15,6 +15,7 @@ export interface WalletResponse {
 }
 
 export interface DepositRequest {
+    symbol: string;
     amount: number;
 }
 
