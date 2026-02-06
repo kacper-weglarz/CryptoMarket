@@ -3,16 +3,19 @@ import { useNavigate } from 'react-router-dom';
 import { Menu, X, TrendingUp, TrendingDown } from 'lucide-react';
 import { useCryptoPrices } from '../../context/CryptoPriceContext';
 
+interface SpotHeaderProps {
+    symbol: string;
+    price?: number;
+    change?: number;
+}
 
-export function SpotHeader({ symbol }: { symbol: string }) {
+export function SpotHeader({ symbol, price, change  }: SpotHeaderProps) {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const { prices } = useCryptoPrices();
     const navigate = useNavigate();
     const menuRef = useRef<HTMLDivElement>(null);
-
-    const currentMarketData = prices ? prices[symbol] : null;
-    const safePrice = currentMarketData?.price || 0;
-    const safeChange = currentMarketData?.change || 0;
+    const safePrice = price ?? prices[symbol]?.price ?? 0;
+    const safeChange = change ?? prices[symbol]?.change ?? 0;
 
     const isPositive = safeChange >= 0;
     const marketList = Object.values(prices || {});

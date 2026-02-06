@@ -1,10 +1,14 @@
+interface OrderFormFuturesProps {
+    base: string;
+    quote: string;
+    currentPrice: number;
+}
 
+export function OrderFormFutures({}: OrderFormFuturesProps) {
 
-export function OrderFormFutures() {
 
     return (
         <div>
-
         </div>
     );
 }

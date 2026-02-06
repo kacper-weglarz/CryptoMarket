@@ -2,11 +2,11 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { TrendingUp, TrendingDown, Activity, Layers } from 'lucide-react';
 
-const positions = [
+const positions: any[] = [];
     // { pair: 'BTC/USDT', type: 'Long', leverage: '10x', entry: 42500, current: 43200, pnl: 2.4, pnlValue: 320.00 },
     // { pair: 'ETH/USDT', type: 'Short', leverage: '5x', entry: 2950, current: 2890, pnl: 1.8, pnlValue: 145.50 },
     // { pair: 'SOL/USDT', type: 'Long', leverage: '20x', entry: 92.50, current: 98.45, pnl: 6.4, pnlValue: 840.00 },
-];
+
 
 export function PositionsSlider() {
 

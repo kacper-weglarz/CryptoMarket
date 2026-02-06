@@ -14,7 +14,6 @@ export function SpotMarket() {
         const upper = rawSymbol.toUpperCase();
         if (upper.includes('-')) {
             const [base, quote] = upper.split('-');
-            // clean: BTCUSDT, formatted: BTC/USDT
             return { base, quote, clean: `${base}${quote}`, formatted: `${base}/${quote}` };
         }
         if (upper.endsWith('USDT')) {
@@ -24,10 +23,8 @@ export function SpotMarket() {
         return { base: upper, quote: 'USDT', clean: `${upper}USDT`, formatted: `${upper}/USDT` };
     };
 
-    const { base, quote, formatted } = parseSymbol(symbol);
-
-    const marketData = prices[formatted];
-
+    const { base, quote, formatted, clean } = parseSymbol(symbol);
+    const marketData = prices[clean];
     const currentPrice = marketData?.price || 0;
 
     return (
@@ -36,11 +33,11 @@ export function SpotMarket() {
                 <SpotHeader
                     symbol={formatted}
                     price={marketData?.price}
-                    change={marketData?.change}
-                />
+                    change={marketData?.change}/>
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 flex-1 min-h-[600px]">
                     <div className="lg:col-span-9 border border-[var(--nav-border)] rounded-2xl bg-[var(--nav-bg)] min-h-[400px]
                                     flex items-center justify-center relative overflow-hidden">
+                        <div className="text-text-muted">Chart Component Placeholder</div>
                     </div>
                     <div className="lg:col-span-3">
                         <OrderFormSpot

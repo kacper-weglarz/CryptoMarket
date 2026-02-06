@@ -8,6 +8,7 @@ interface Props {
     base: string;
     quote: string;
     currentPrice: number;
+
 }
 
 export function useOrderFormSpot({ base, quote, currentPrice }: Props) {

@@ -14,7 +14,7 @@ export function BalanceCard() {
             scale: 1.15,
             borderColor: 'rgba(16, 185, 129, 0.6)',
             boxShadow: '0 0 20px rgba(16, 185, 129, 0.4), inset 0 0 10px rgba(16, 185, 129, 0.1)',
-            transition: { type: "spring", stiffness: 400, damping: 17 }
+            transition: { type: "spring" as const, stiffness: 400, damping: 17 }
         },
         tap: { scale: 0.9 }
     };
@@ -23,7 +23,7 @@ export function BalanceCard() {
         hover: {
             rotate: 180,
             color: '#34d399',
-            transition: { type: "spring", stiffness: 300 }
+            transition: { type: "spring" as const, stiffness: 300 }
         }
     };
 

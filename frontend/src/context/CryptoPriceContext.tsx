@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState, ReactNode, useCallback, useRef, useMemo } from 'react';
+import  { createContext, useContext, useEffect, useState, ReactNode, useCallback, useRef, useMemo } from 'react';
 import SockJS from 'sockjs-client';
 import Stomp from 'stompjs';
 
@@ -17,6 +17,7 @@ interface CryptoPriceContextType {
 }
 
 const SOCKET_URL = import.meta.env.VITE_WS_URL || 'http://localhost:8080/ws-public';
+console.log("WebSocket URL:", SOCKET_URL);
 const CryptoPriceContext = createContext<CryptoPriceContextType | undefined>(undefined);
 
 export const CryptoPriceProvider = ({ children }: { children: ReactNode }) => {
@@ -45,6 +46,7 @@ export const CryptoPriceProvider = ({ children }: { children: ReactNode }) => {
             clientRef.current = client;
 
             client.subscribe('/topic/prices', (message) => {
+
                 const update: PriceData = JSON.parse(message.body);
 
                 const symbolKey = update.symbol.toUpperCase();
