@@ -24,8 +24,9 @@ export function OrderFormSpot({ base, quote, currentPrice }: any) {
                         {logic.side === 'BUY' ? quote : base}
                     </span>
                     <span className="text-[var(--text-muted)] opacity-70">
-                        ≈ {logic.side === 'BUY' ? logic.availableQuote.div(logic.safePrice).toFixed(5) :
-                        logic.availableBase.mul(logic.safePrice).toFixed(2)} {logic.side === 'BUY' ? base : quote}
+                        ≈ {logic.side === 'BUY'
+                        ? (logic.safePrice.gt(0) ? logic.availableQuote.div(logic.safePrice).toFixed(5) : '0.00000')
+                        : logic.availableBase.mul(logic.safePrice).toFixed(2)} {logic.side === 'BUY' ? base : quote}
                     </span>
                 </div>
             </div>

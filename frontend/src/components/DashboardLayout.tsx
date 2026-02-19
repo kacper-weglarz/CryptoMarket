@@ -2,7 +2,7 @@ import { ReactNode, useState, useRef, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
     Store, Bell, User, LogOut, Settings, Wallet, Gem,
-    LayoutDashboard, LineChart, CandlestickChart,
+    LayoutDashboard, LineChart, //CandlestickChart,
     Menu, Search, Sun, Moon, PanelLeftClose, PanelLeftOpen
 } from 'lucide-react';
 import { useTheme } from '../hooks/useTheme';
@@ -15,7 +15,6 @@ interface DashboardLayoutProps {
 }
 
 export function DashboardLayout({ children }: DashboardLayoutProps) {
-
     const [isCollapsed, setIsCollapsed] = useState(false);
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const menuRef = useRef<HTMLDivElement>(null);
@@ -47,7 +46,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
         { label: 'Pulpit', path: '/dashboard', icon: LayoutDashboard },
         { label: 'Rynki', path: '/market', icon: LineChart },
         { label: 'Spot', path: '/spot', icon: Store },
-        { label: 'Futures', path: '/futures', icon: CandlestickChart },
+        //{ label: 'Futures', path: '/futures', icon: CandlestickChart },
         { label: 'Portfel', path: '/wallet', icon: Wallet },
     ];
 

@@ -23,8 +23,8 @@ export function SpotMarket() {
         return { base: upper, quote: 'USDT', clean: `${upper}USDT`, formatted: `${upper}/USDT` };
     };
 
-    const { base, quote, formatted, clean } = parseSymbol(symbol);
-    const marketData = prices[clean];
+    const { base, quote, formatted } = parseSymbol(symbol);
+    const marketData = prices[formatted];
     const currentPrice = marketData?.price || 0;
 
     return (
@@ -43,8 +43,7 @@ export function SpotMarket() {
                         <OrderFormSpot
                             base={base}
                             quote={quote}
-                            currentPrice={currentPrice}
-                        />
+                            currentPrice={currentPrice}/>
                     </div>
                 </div>
             </div>

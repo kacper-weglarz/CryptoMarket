@@ -19,17 +19,19 @@ export function Navbar() {
                     Crypto Market
                 </span>
             </div>
-            <div className="hidden items-center gap-12 md:flex">
-                {['Features', 'Market', 'Informacje'].map((item) => (
-                    <a
-                        key={item}
-                        href="#"
-                        className="group relative text-lg font-medium text-text-muted ">
-                        {item}
-                        <span className="absolute -bottom-1 left-0 h-0.5 w-0 bg-emerald-400 transition-all duration-300 group-hover:w-full"></span>
-                    </a>
-                ))}
-            </div>
+            {/*
+                <div className="hidden items-center gap-12 md:flex">
+                    {['Features', 'Market', 'Informacje'].map((item) => (
+                        <a
+                            key={item}
+                            href="#"
+                            className="group relative text-lg font-medium text-text-muted ">
+                            {item}
+                            <span className="absolute -bottom-1 left-0 h-0.5 w-0 bg-emerald-400 transition-all duration-300 group-hover:w-full"></span>
+                        </a>
+                    ))}
+                </div>
+            */}
             <div className="flex items-center gap-4">
                 <button
                     onClick={toggleTheme}

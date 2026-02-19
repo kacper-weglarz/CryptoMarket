@@ -4,7 +4,7 @@ import { DashboardLayout } from '../components/DashboardLayout';
 import { FuturesHeader } from '../components/futuresMarket/FuturesHeader';
 import { OrderFormFutures } from '../components/futuresMarket/OrderFormFutures';
 
-export function SpotMarket() {
+export function FuturesMarket() {
     const { symbol } = useParams();
     const { prices } = useCryptoPrices();
 

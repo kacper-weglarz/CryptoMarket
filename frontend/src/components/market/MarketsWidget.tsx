@@ -10,11 +10,9 @@ export function MarketsWidget() {
         .sort((a, b) => {
             const isAFav = favorites.includes(a.symbol);
             const isBFav = favorites.includes(b.symbol);
-
             if (isAFav && !isBFav) return -1;
             if (!isAFav && isBFav) return 1;
-
-            return b.volume - a.volume;
+            return (b.price || 0) - (a.price || 0);
         });
 
     const formatVol = (val: number) => {

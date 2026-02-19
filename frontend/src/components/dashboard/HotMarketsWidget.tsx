@@ -12,7 +12,7 @@ export function HotMarketsWidget() {
             const isBFav = favorites.includes(b.symbol);
             if (isAFav && !isBFav) return -1;
             if (!isAFav && isBFav) return 1;
-            return b.volume - a.volume;
+            return (b.price || 0) - (a.price || 0);
         })
         .slice(0, 5);
 

@@ -25,9 +25,9 @@ public class WebSocketClient {
     private Session session;
 
     private final String[] symbols = {
-            "btc/usdt", "eth/usdt", "bnb/usdt", "sol/usdt",
-            "xrp/usdt", "ada/usdt", "avax/usdt", "doge/usdt",
-            "shib/usdt", "pepe/usdt"
+            "btcusdt", "ethusdt", "bnbusdt", "solusdt",
+            "xrpusdt", "adausdt", "avaxusdt", "dogeusdt",
+            "shibusdt", "pepeusdt"
     };
 
     @Autowired
