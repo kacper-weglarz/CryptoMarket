@@ -1,0 +1,10 @@
+# Secrets
+.env
+.env.local
+
+# IDE
+.idea/
+.vscode/
+
+# System
+.DS_Store

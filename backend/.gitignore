@@ -35,7 +35,7 @@ build/
 # === Secrets / env ===
 .env
 .env.*
-application.properties
+application-local.properties
 application-*.properties
 docker-compose.yml
 
