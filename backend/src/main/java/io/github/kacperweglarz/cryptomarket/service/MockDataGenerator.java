@@ -1,5 +1,6 @@
 package io.github.kacperweglarz.cryptomarket.service;
 
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Profile;
 import org.springframework.scheduling.annotation.EnableScheduling;
@@ -21,6 +22,8 @@ public class MockDataGenerator {
     private final MarketDataService marketDataService;
     private final Random random = new Random();
 
+    @Setter
+    private boolean paused = false;
 
     private final Map<String, BigDecimal> mockPrices = new HashMap<>();
 
@@ -38,6 +41,7 @@ public class MockDataGenerator {
 
     @Scheduled(fixedRate = 1000)
     public void generateFakeData() {
+        if (paused) return;
 
         mockPrices.forEach((symbol, currentPrice) -> {
 

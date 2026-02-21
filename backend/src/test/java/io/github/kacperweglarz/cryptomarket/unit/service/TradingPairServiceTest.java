@@ -1,4 +1,4 @@
-package io.github.kacperweglarz.cryptomarket.serviceTest;
+package io.github.kacperweglarz.cryptomarket.unit.service;
 
 import io.github.kacperweglarz.cryptomarket.entity.Asset;
 import io.github.kacperweglarz.cryptomarket.entity.TradingPair;

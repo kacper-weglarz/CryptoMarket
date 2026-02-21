@@ -1,4 +1,4 @@
-package io.github.kacperweglarz.cryptomarket.serviceTest;
+package io.github.kacperweglarz.cryptomarket.unit.service;
 
 import io.github.kacperweglarz.cryptomarket.DTO.request.SpotOrderRequest;
 import io.github.kacperweglarz.cryptomarket.DTO.response.SpotOrderResponse;
@@ -10,7 +10,6 @@ import io.github.kacperweglarz.cryptomarket.entity.enums.OrderSide;
 import io.github.kacperweglarz.cryptomarket.entity.enums.OrderStatus;
 import io.github.kacperweglarz.cryptomarket.entity.enums.OrderType;
 import io.github.kacperweglarz.cryptomarket.exception.InvalidAmountException;
-import io.github.kacperweglarz.cryptomarket.exception.PriceNotFoundException;
 import io.github.kacperweglarz.cryptomarket.repository.OrderRepository;
 import io.github.kacperweglarz.cryptomarket.repository.UserRepository;
 import io.github.kacperweglarz.cryptomarket.service.MarketDataService;

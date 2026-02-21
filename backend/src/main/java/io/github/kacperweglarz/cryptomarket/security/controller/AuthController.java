@@ -4,6 +4,7 @@ import io.github.kacperweglarz.cryptomarket.DTO.request.LoginRequest;
 import io.github.kacperweglarz.cryptomarket.DTO.request.RegisterRequest;
 import io.github.kacperweglarz.cryptomarket.DTO.response.UserResponse;
 import io.github.kacperweglarz.cryptomarket.security.service.AuthService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -22,7 +23,7 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<UserResponse> register(@RequestBody RegisterRequest registerRequest) {
+    public ResponseEntity<UserResponse> register(@Valid @RequestBody RegisterRequest registerRequest) {
 
         UserResponse registerResponse = authService.registerUser(registerRequest);
 
@@ -30,7 +31,7 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<UserResponse> login (@RequestBody LoginRequest loginRequest) {
+    public ResponseEntity<UserResponse> login (@Valid @RequestBody LoginRequest loginRequest) {
 
         UserResponse loginResponse = authService.loginUser(loginRequest);
 

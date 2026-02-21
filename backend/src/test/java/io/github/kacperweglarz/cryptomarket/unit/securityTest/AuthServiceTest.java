@@ -1,4 +1,4 @@
-package io.github.kacperweglarz.cryptomarket.security;
+package io.github.kacperweglarz.cryptomarket.unit.securityTest;
 
 import io.github.kacperweglarz.cryptomarket.DTO.request.LoginRequest;
 import io.github.kacperweglarz.cryptomarket.DTO.request.RegisterRequest;

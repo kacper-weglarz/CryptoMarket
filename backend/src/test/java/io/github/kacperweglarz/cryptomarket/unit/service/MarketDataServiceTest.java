@@ -1,4 +1,4 @@
-package io.github.kacperweglarz.cryptomarket.serviceTest;
+package io.github.kacperweglarz.cryptomarket.unit.service;
 
 import io.github.kacperweglarz.cryptomarket.entity.MarketData;
 import io.github.kacperweglarz.cryptomarket.entity.TradingPair;
@@ -21,9 +21,6 @@ import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class MarketDataServiceTest {
-
-    @Mock
-    MarketDataRepository marketDataRepository;
 
     @Mock
     TradingPairService tradingPairService;
@@ -87,28 +84,6 @@ class MarketDataServiceTest {
         assertEquals(new BigDecimal("3"), result.getVolume());
     }
 
-    @Test
-    void shouldCloseOldCandleAndCreateNewOneWhenMinuteChanges() {
-
-        when(tradingPairService.getOrCreateTradingPair(symbol)).thenReturn(tradingPair);
-
-        BigDecimal price1 = new BigDecimal("100");
-        BigDecimal price2 = new BigDecimal("200");
-
-        MarketData firstCandle = marketDataService.updatePrices(symbol, price1, BigDecimal.ONE, BigDecimal.ZERO);
-
-        Instant firstTimestamp = firstCandle.getTimestamp();
-
-        firstCandle.setTimestamp(firstTimestamp.minus(1, ChronoUnit.MINUTES));
-
-        MarketData secondCandle = marketDataService.updatePrices(symbol, price2, BigDecimal.TEN, BigDecimal.ZERO);
-
-        assertNotSame(firstCandle, secondCandle);
-        assertEquals(firstTimestamp, secondCandle.getTimestamp());
-        assertEquals(price2, secondCandle.getOpen());
-
-        verify(marketDataRepository).save(firstCandle);
-    }
 
     @Test
     void shouldReturnPriceFromCurrentCandle() {

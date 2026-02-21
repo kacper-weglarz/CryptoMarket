@@ -50,6 +50,7 @@ public class WalletController {
         return ResponseEntity.ok().build();
     }
 
+    @Deprecated
     @PostMapping("/deposit")
     public ResponseEntity<WalletResponse> deposit(@Valid @RequestBody DepositRequest depositRequest, Authentication authentication) {
 
