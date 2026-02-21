@@ -2,7 +2,6 @@
 
 ![GitHub Repo Size](https://img.shields.io/github/repo-size/kacper-weglarz/cryptomarket)
 ![GitHub Stars](https://img.shields.io/github/stars/kacper-weglarz/cryptomarket)
-![GitHub License](https://img.shields.io/github/license/kacper-weglarz/cryptomarket)
 
 **CryptoMarket** is a modern full-stack **paper trading** application that allows users to simulate cryptocurrency trading in a safe environment. It combines a high-performance **Spring Boot** backend with a reactive **React** frontend.
 
