@@ -49,8 +49,15 @@ cd cryptomarket
 ```
 ### 2. Configure environment
 ```bash
-Create a .env file based on .env.example
+cp .env.example .env
 ```
+Open .env and fill in your actual values (e.g., JWT_SECRET, DB_PASSWORD).
+
+```bash
+cp backend/src/main/resources/application.properties.example backend/src/main/resources/application.properties
+```
+The file is pre-configured to use placeholders (e.g., ${DB_USER}). These values are automatically injected from your .env file when running via Docker Compose.
+
 ### 3. Start the containers
  ```bash
 docker-compose up --build
