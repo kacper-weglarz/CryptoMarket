@@ -9,6 +9,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import io.github.kacperweglarz.cryptomarket.entity.User;
 import io.github.kacperweglarz.cryptomarket.entity.Wallet;
+import io.github.kacperweglarz.cryptomarket.repository.OrderRepository;
 import io.github.kacperweglarz.cryptomarket.repository.UserRepository;
 import io.github.kacperweglarz.cryptomarket.repository.WalletRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -16,10 +17,9 @@ import org.springframework.http.MediaType;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
-
 import java.util.Optional;
 
-public class AuthControllerTest extends BaseIntegrationTest {
+public class AuthControllerIT extends BaseIntegrationIT {
 
     @Autowired
     private UserRepository userRepository;
@@ -30,10 +30,14 @@ public class AuthControllerTest extends BaseIntegrationTest {
     @Autowired
     private WalletRepository walletRepository;
 
+    @Autowired
+    private OrderRepository orderRepository;
+
     protected ObjectMapper objectMapper = new ObjectMapper();
 
     @BeforeEach
     void setUp() {
+        orderRepository.deleteAll();
         walletRepository.deleteAll();
         userRepository.deleteAll();
     }

@@ -1,8 +1,11 @@
 package io.github.kacperweglarz.cryptomarket.integration;
 
 import io.github.kacperweglarz.cryptomarket.entity.User;
+import io.github.kacperweglarz.cryptomarket.repository.OrderRepository;
 import io.github.kacperweglarz.cryptomarket.repository.UserRepository;
+import io.github.kacperweglarz.cryptomarket.repository.WalletRepository;
 import io.github.kacperweglarz.cryptomarket.security.service.JwtService;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.test.context.support.WithMockUser;
@@ -11,13 +14,26 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 
-public class UserControllerTest extends BaseIntegrationTest {
+public class UserControllerIT extends BaseIntegrationIT {
 
     @Autowired
     private UserRepository userRepository;
 
     @Autowired
     private JwtService jwtService;
+
+    @Autowired
+    private OrderRepository orderRepository;
+
+    @Autowired
+    private WalletRepository walletRepository;
+
+    @BeforeEach
+    void setUp() {
+        orderRepository.deleteAll();
+        walletRepository.deleteAll();
+        userRepository.deleteAll();
+    }
 
     @Test
     @WithMockUser(username = "user@user")
